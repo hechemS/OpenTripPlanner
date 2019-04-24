@@ -4,6 +4,13 @@ import java.util.*;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import constraints.ConstraintController;
+import constraints.ConstraintWrapper;
+import constraints.SingleConstraint;
+import constraints.conditions.ValueCondition;
+import constraints.conditions.ValueConditionType;
+import constraints.identifiers.TransportModeEnum;
+import constraints.identifiers.TransportModeIdentifier;
 import org.opentripplanner.common.pqueue.BinHeap;
 import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.SearchTerminationStrategy;
@@ -373,6 +380,9 @@ public class AStar {
     boolean fullfillsConstraints(State v) {
         SimpleState s = new SimpleState(v);
 
-        return true;
+        Gson gson = new Gson();
+        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"WALK\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":800.0,\"minimum\":false}}]}";
+        ConstraintController constraintController = new ConstraintController(json);
+        return constraintController.fullfillsConstraints(gson.toJson(s));
     }
 }
