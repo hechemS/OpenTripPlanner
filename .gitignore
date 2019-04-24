@@ -1,6 +1,7 @@
 dependency-reduced-pom.xml
 target/
 build/
+data/
 dist/
 docs/_build/
 otp-core/build/

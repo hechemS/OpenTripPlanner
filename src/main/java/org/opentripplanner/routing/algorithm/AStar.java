@@ -1,17 +1,18 @@
 package org.opentripplanner.routing.algorithm;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.opentripplanner.common.pqueue.BinHeap;
 import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.SearchTerminationStrategy;
 import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHeuristic;
+import org.opentripplanner.routing.constraints.SimpleState;
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.*;
@@ -180,7 +181,7 @@ public class AStar {
 
 //                LOG.info("{} {}", v, remaining_w);
 
-                if (remaining_w < 0 || Double.isInfinite(remaining_w) ) {
+                if (remaining_w < 0 || Double.isInfinite(remaining_w) || !fullfillsConstraints(v)) {
                     continue;
                 }
                 double estimate = v.getWeight() + remaining_w;
@@ -299,6 +300,15 @@ public class AStar {
         }
         
         storeMemory();
+
+        SimpleState ss = new SimpleState(runState.u);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        //System.out.println(gson.toJson(ss));
+        Map<TraverseMode, Double> map = new HashMap<>();
+        System.out.println("########Distances########");
+        ss.logDistances(map);
+        System.out.println(gson.toJson(map));
+
         return spt;
     }
     
@@ -358,5 +368,11 @@ public class AStar {
             }
         }
         return ret;
+    }
+
+    boolean fullfillsConstraints(State v) {
+        SimpleState s = new SimpleState(v);
+
+        return true;
     }
 }
