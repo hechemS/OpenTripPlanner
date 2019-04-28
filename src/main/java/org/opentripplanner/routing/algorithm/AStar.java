@@ -49,6 +49,8 @@ public class AStar {
 
     private TraverseVisitor traverseVisitor;
 
+    private ConstraintController constraintController;
+
     enum RunStatus {
         RUNNING, STOPPED
     }
@@ -101,6 +103,9 @@ public class AStar {
     /** set up the search, optionally not adding the initial state to the queue (for multi-state Dijkstra) */
     private void startSearch(RoutingRequest options,
             SearchTerminationStrategy terminationStrategy, long abortTime, boolean addToQueue) {
+
+        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":800.0,\"minimum\":false}}]}";
+        constraintController = new ConstraintController(json);
 
         runState = new RunState( options, terminationStrategy );
         runState.rctx = options.getRoutingContext();
@@ -235,6 +240,7 @@ public class AStar {
              * Terminate based on timeout?
              */
             if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
+                constraintController.printInputs();
                 LOG.warn("Search timeout. origin={} target={}", runState.rctx.origin, runState.rctx.target);
                 // Rather than returning null to indicate that the search was aborted/timed out,
                 // we instead set a flag in the routing context and return the SPT anyway. This
@@ -339,7 +345,7 @@ public class AStar {
             runSearch(abortTime);
             spt = runState.spt;
         }
-        
+
         return spt;
     }
 
@@ -377,12 +383,11 @@ public class AStar {
         return ret;
     }
 
-    boolean fullfillsConstraints(State v) {
+    private boolean fullfillsConstraints(State v) {
+        if (false) return true;
         SimpleState s = new SimpleState(v);
-
         Gson gson = new Gson();
-        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"WALK\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":800.0,\"minimum\":false}}]}";
-        ConstraintController constraintController = new ConstraintController(json);
-        return constraintController.fullfillsConstraints(gson.toJson(s));
+        constraintController.fullfillsConstraints(gson.toJson(s));
+        return true;
     }
 }

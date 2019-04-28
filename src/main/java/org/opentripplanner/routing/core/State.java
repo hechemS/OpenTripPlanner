@@ -2,6 +2,7 @@ package org.opentripplanner.routing.core;
 
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Stop;
@@ -17,7 +18,8 @@ import org.slf4j.LoggerFactory;
 
 public class State implements Cloneable {
     /* Data which is likely to change at most traversals */
-    
+
+    protected UUID uuid;
     // the current time at this state, in milliseconds
     protected long time;
 
@@ -95,6 +97,7 @@ public class State implements Cloneable {
      * a multiple initial state search, for example when propagating profile results to the street network in RoundBasedProfileRouter.
      */
     public State(Vertex vertex, Edge backEdge, long timeSeconds, long startTime, RoutingRequest options) {
+        this.uuid = UUID.randomUUID();
         this.weight = 0;
         this.vertex = vertex;
         this.backEdge = backEdge;
@@ -136,6 +139,7 @@ public class State implements Cloneable {
         State ret;
         try {
             ret = (State) super.clone();
+            ret.uuid = UUID.randomUUID();
         } catch (CloneNotSupportedException e1) {
             throw new IllegalStateException("This is not happening");
         }
@@ -146,6 +150,10 @@ public class State implements Cloneable {
      * FIELD ACCESSOR METHODS States are immutable, so they have only get methods. The corresponding
      * set methods are in StateEditor.
      */
+
+    public UUID getUuid() {
+        return uuid;
+    }
 
     /**
      * Retrieve a State extension based on its key.

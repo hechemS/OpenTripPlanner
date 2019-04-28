@@ -4,8 +4,10 @@ import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class SimpleState {
+    UUID uuid;
     long time;
     SimpleVertex vertex;
     SimpleState backState;
@@ -13,6 +15,7 @@ public class SimpleState {
     Double distance = null;
 
     public SimpleState(State s) {
+        this.uuid = s.getUuid();
         this.time = s.getTimeInMillis();
         this.backMode = s.getBackMode();
         this.vertex = new SimpleVertex(s.getVertex());
