@@ -83,6 +83,7 @@
         <jackson.version>2.9.7</jackson.version>
         <jersey.version>2.18</jersey.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
     </properties>
 
     <distributionManagement>

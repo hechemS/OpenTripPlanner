@@ -5,12 +5,6 @@ import java.util.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import constraints.ConstraintController;
-import constraints.ConstraintWrapper;
-import constraints.SingleConstraint;
-import constraints.conditions.ValueCondition;
-import constraints.conditions.ValueConditionType;
-import constraints.identifiers.TransportModeEnum;
-import constraints.identifiers.TransportModeIdentifier;
 import org.opentripplanner.common.pqueue.BinHeap;
 import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.SearchTerminationStrategy;
@@ -389,7 +383,7 @@ public class AStar {
         SimpleState s = new SimpleState(v);
         Gson gson = new Gson();
         boolean fullfills = constraintController.fullfillsConstraints(gson.toJson(s));
-        if (!fullfills) System.out.println("NOT VALID");
+        //if (!fullfills) System.out.println("NOT VALID");
         //return fullfills;
         return true;
     }
