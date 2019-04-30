@@ -2,6 +2,7 @@ dependency-reduced-pom.xml
 target/
 build/
 data/
+src/main/resources/jsondesign.jar
 dist/
 docs/_build/
 otp-core/build/
