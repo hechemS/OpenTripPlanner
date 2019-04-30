@@ -104,7 +104,8 @@ public class AStar {
     private void startSearch(RoutingRequest options,
             SearchTerminationStrategy terminationStrategy, long abortTime, boolean addToQueue) {
 
-        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":800.0,\"minimum\":false}}]}";
+        //String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":800.0,\"minimum\":false}}]}";
+        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"empty\"},\"previousResults\":{},\"cacheHits\":0,\"cacheMisses\":0}]}";
         constraintController = new ConstraintController(json);
 
         runState = new RunState( options, terminationStrategy );
@@ -160,7 +161,7 @@ public class AStar {
         
         // check that this state has not been dominated
         // and mark vertex as visited
-        if (!runState.spt.visit(runState.u)) {
+        if (!runState.spt.visit(runState.u) || !fullfillsConstraints(runState.u)) {
             // state has been dominated since it was added to the priority queue, so it is
             // not in any optimal path. drop it on the floor and try the next one.
             return false;
@@ -193,7 +194,7 @@ public class AStar {
 
 //                LOG.info("{} {}", v, remaining_w);
 
-                if (remaining_w < 0 || Double.isInfinite(remaining_w) || !fullfillsConstraints(v)) {
+                if (remaining_w < 0 || Double.isInfinite(remaining_w)) {
                     continue;
                 }
                 double estimate = v.getWeight() + remaining_w;
@@ -387,7 +388,9 @@ public class AStar {
         if (false) return true;
         SimpleState s = new SimpleState(v);
         Gson gson = new Gson();
-        constraintController.fullfillsConstraints(gson.toJson(s));
+        boolean fullfills = constraintController.fullfillsConstraints(gson.toJson(s));
+        if (!fullfills) System.out.println("NOT VALID");
+        //return fullfills;
         return true;
     }
 }

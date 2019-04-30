@@ -449,6 +449,13 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>de.tum.in.dbudischek</groupId>
+            <artifactId>jsondesign</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/jsondesign.jar</systemPath>
+        </dependency>
         <!-- Logging library, implements slf4j logging API -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
