@@ -19,6 +19,7 @@ import org.locationtech.jts.geom.Coordinate;
 import java.util.Locale;
 import org.opentripplanner.util.I18NString;
 import org.opentripplanner.util.NonLocalizedString;
+import state.SimpleVertex;
 
 /**
  * A vertex in the graph. Each vertex has a longitude/latitude location, as well as a set of
@@ -293,5 +294,9 @@ public abstract class Vertex implements Serializable, Cloneable {
             result.add((StreetEdge) out);
         }
         return result;
+    }
+
+    public SimpleVertex toSimpleVertex() {
+        return new SimpleVertex(this.getLon(), this.getLat());
     }
 }

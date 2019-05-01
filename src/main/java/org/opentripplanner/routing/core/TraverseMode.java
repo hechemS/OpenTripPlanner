@@ -1,5 +1,7 @@
 package org.opentripplanner.routing.core;
 
+import state.SimpleTraverseMode;
+
 import javax.xml.bind.annotation.XmlType;
 
 import java.util.Collections;
@@ -46,4 +48,37 @@ public enum TraverseMode {
         return this == CAR;
     }
 
+    public SimpleTraverseMode toSimpleTraverseMode() {
+        switch (this) {
+            case WALK:
+                return SimpleTraverseMode.WALK;
+            case BICYCLE:
+                return SimpleTraverseMode.BICYCLE;
+            case CAR:
+                return SimpleTraverseMode.CAR;
+            case TRAM:
+                return SimpleTraverseMode.TRAM;
+            case SUBWAY:
+                return SimpleTraverseMode.SUBWAY;
+            case RAIL:
+                return SimpleTraverseMode.RAIL;
+            case BUS:
+                return SimpleTraverseMode.BUS;
+            case FERRY:
+                return SimpleTraverseMode.FERRY;
+            case CABLE_CAR:
+                return SimpleTraverseMode.CABLE_CAR;
+            case GONDOLA:
+                return SimpleTraverseMode.GONDOLA;
+            case FUNICULAR:
+                return SimpleTraverseMode.FUNICULAR;
+            case TRANSIT:
+                return SimpleTraverseMode.TRANSIT;
+            case LEG_SWITCH:
+                return SimpleTraverseMode.LEG_SWITCH;
+            case AIRPLANE:
+                return SimpleTraverseMode.AIRPLANE;
+        }
+        return null;
+    }
 }

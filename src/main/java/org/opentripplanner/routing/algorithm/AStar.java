@@ -9,11 +9,9 @@ import org.opentripplanner.common.pqueue.BinHeap;
 import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.SearchTerminationStrategy;
 import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHeuristic;
-import org.opentripplanner.routing.constraints.SimpleState;
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
-import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.*;
@@ -24,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.internal.Lists;
+import state.SimpleState;
+import state.SimpleTraverseMode;
 
 /**
  * Find the shortest path between graph vertices using A*.
@@ -98,8 +98,8 @@ public class AStar {
     private void startSearch(RoutingRequest options,
             SearchTerminationStrategy terminationStrategy, long abortTime, boolean addToQueue) {
 
-        //String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":800.0,\"minimum\":false}}]}";
-        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"empty\"},\"previousResults\":{},\"cacheHits\":0,\"cacheMisses\":0}]}";
+        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"CAR\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":800.0,\"minimum\":false}}]}";
+        //String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"empty\"},\"previousResults\":{},\"cacheHits\":0,\"cacheMisses\":0}]}";
         constraintController = new ConstraintController(json);
 
         runState = new RunState( options, terminationStrategy );
@@ -235,7 +235,6 @@ public class AStar {
              * Terminate based on timeout?
              */
             if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
-                constraintController.printInputs();
                 LOG.warn("Search timeout. origin={} target={}", runState.rctx.origin, runState.rctx.target);
                 // Rather than returning null to indicate that the search was aborted/timed out,
                 // we instead set a flag in the routing context and return the SPT anyway. This
@@ -309,10 +308,10 @@ public class AStar {
         
         storeMemory();
 
-        SimpleState ss = new SimpleState(runState.u);
+        SimpleState ss = runState.u.toSimpleState();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         //System.out.println(gson.toJson(ss));
-        Map<TraverseMode, Double> map = new HashMap<>();
+        Map<SimpleTraverseMode, Double> map = new HashMap<>();
         System.out.println("########Distances########");
         ss.logDistances(map);
         System.out.println(gson.toJson(map));
@@ -379,12 +378,13 @@ public class AStar {
     }
 
     private boolean fullfillsConstraints(State v) {
+        System.out.println("START");
         if (false) return true;
-        SimpleState s = new SimpleState(v);
-        Gson gson = new Gson();
-        boolean fullfills = constraintController.fullfillsConstraints(gson.toJson(s));
-        //if (!fullfills) System.out.println("NOT VALID");
-        //return fullfills;
-        return true;
+        SimpleState s = v.toSimpleState();
+        boolean fullfills = constraintController.fullfillsConstraints(s);
+        if (!fullfills) System.out.println("NOT VALID");
+        System.out.println("END");
+        return fullfills;
+        //return true;
     }
 }

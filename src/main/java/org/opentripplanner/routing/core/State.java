@@ -15,6 +15,7 @@ import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.vertextype.BikeRentalStationVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import state.SimpleState;
 
 public class State implements Cloneable {
     /* Data which is likely to change at most traversals */
@@ -845,4 +846,14 @@ public class State implements Cloneable {
         return stateData.enteredNoThroughTrafficArea;
     }
 
+    public SimpleState toSimpleState() {
+        SimpleState s = new SimpleState();
+        s.setUuid(this.getUuid());
+        s.setTime(this.getTimeInMillis());
+        if(this.getVertex() != null) s.setVertex(this.getVertex().toSimpleVertex());
+        if(this.getBackMode() != null) s.setBackMode(this.getBackMode().toSimpleTraverseMode());
+        if(this.getBackState() != null) s.setBackState(this.getBackState().toSimpleState());
+        if(this.getBackEdge() != null) s.setDistance(this.backEdge.getDistance());
+        return s;
+    }
 }
