@@ -43,8 +43,6 @@ public class AStar {
 
     private TraverseVisitor traverseVisitor;
 
-    private ConstraintController constraintController;
-
     enum RunStatus {
         RUNNING, STOPPED
     }
@@ -98,9 +96,9 @@ public class AStar {
     private void startSearch(RoutingRequest options,
             SearchTerminationStrategy terminationStrategy, long abortTime, boolean addToQueue) {
 
-        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"CAR\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":800.0,\"minimum\":false}}]}";
+        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"WALK\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":1000.0,\"minimum\":false}}]}";
         //String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"empty\"},\"previousResults\":{},\"cacheHits\":0,\"cacheMisses\":0}]}";
-        constraintController = new ConstraintController(json);
+
 
         runState = new RunState( options, terminationStrategy );
         runState.rctx = options.getRoutingContext();
@@ -378,12 +376,9 @@ public class AStar {
     }
 
     private boolean fullfillsConstraints(State v) {
-        System.out.println("START");
         if (false) return true;
         SimpleState s = v.toSimpleState();
-        boolean fullfills = constraintController.fullfillsConstraints(s);
-        if (!fullfills) System.out.println("NOT VALID");
-        System.out.println("END");
+        boolean fullfills = runState.options.constraintController.fullfillsConstraints(s);
         return fullfills;
         //return true;
     }

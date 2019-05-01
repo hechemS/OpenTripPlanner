@@ -1,6 +1,7 @@
 package org.opentripplanner.routing.core;
 
 import com.google.common.base.Objects;
+import constraints.ConstraintController;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
@@ -70,6 +71,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** The end location */
     public GenericLocation to;
 
+    public ConstraintController constraintController;
     /** An ordered list of intermediate locations to be visited. */
     public List<GenericLocation> intermediatePlaces;
 

@@ -11,6 +11,7 @@ import org.opentripplanner.standalone.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -43,7 +44,7 @@ public class PlannerResource extends RoutingResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML + Q, MediaType.TEXT_XML + Q })
     public Response plan(@Context UriInfo uriInfo, @Context Request grizzlyRequest) {
-
+        //System.out.println(constraint);
         /*
          * TODO: add Lang / Locale parameter, and thus get localized content (Messages & more...)
          * TODO: from/to inputs should be converted / geocoded / etc... here, and maybe send coords 

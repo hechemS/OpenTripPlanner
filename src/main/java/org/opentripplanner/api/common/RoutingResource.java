@@ -10,6 +10,7 @@ import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import constraints.ConstraintController;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.OptimizeType;
@@ -56,6 +57,9 @@ public abstract class RoutingResource {
     /** The end location (see fromPlace for format). */
     @QueryParam("toPlace")
     protected String toPlace;
+
+    @QueryParam("constraint")
+    protected String constraint;
 
     /** An ordered list of intermediate locations to be visited (see the fromPlace for format). Parameter can be specified multiple times. */
     @QueryParam("intermediatePlaces")
@@ -426,6 +430,7 @@ public abstract class RoutingResource {
         if (toPlace != null)
             request.setToString(toPlace);
 
+        request.constraintController = new ConstraintController(constraint);
         {
             //FIXME: move into setter method on routing request
             TimeZone tz;
