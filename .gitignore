@@ -2,6 +2,7 @@ dependency-reduced-pom.xml
 target/
 build/
 data/
+libs/
 src/main/resources/jsondesign.jar
 dist/
 docs/_build/

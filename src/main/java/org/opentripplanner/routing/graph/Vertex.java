@@ -297,6 +297,6 @@ public abstract class Vertex implements Serializable, Cloneable {
     }
 
     public SimpleVertex toSimpleVertex() {
-        return new SimpleVertex(this.getLon(), this.getLat());
+        return new SimpleVertex(this.getLat(), this.getLon());
     }
 }
