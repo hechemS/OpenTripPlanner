@@ -430,7 +430,12 @@ public abstract class RoutingResource {
         if (toPlace != null)
             request.setToString(toPlace);
 
-        request.constraintController = new ConstraintController(constraint);
+        if (constraint != null) {
+            request.constraintController = new ConstraintController(constraint);
+        } else {
+            request.constraintController = new ConstraintController("{\"constraints\":[]}");
+        }
+
         {
             //FIXME: move into setter method on routing request
             TimeZone tz;
