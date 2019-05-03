@@ -11,10 +11,7 @@ import org.opentripplanner.standalone.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -37,6 +34,13 @@ import static org.opentripplanner.api.resource.ServerInfo.Q;
 public class PlannerResource extends RoutingResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(PlannerResource.class);
+
+    @PUT
+    @Consumes({ MediaType.APPLICATION_JSON})
+    public void plan(String json, @PathParam("routerId") String routerId) {
+        Router router = otpServer.getRouter(routerId);
+        router.constraint = json;
+    }
 
     // We inject info about the incoming request so we can include the incoming query
     // parameters in the outgoing response. This is a TriMet requirement.

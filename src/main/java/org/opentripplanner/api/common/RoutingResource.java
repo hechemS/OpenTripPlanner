@@ -433,7 +433,8 @@ public abstract class RoutingResource {
         if (constraint != null) {
             request.constraintController = new ConstraintController(constraint);
         } else {
-            request.constraintController = new ConstraintController("{\"constraints\":[]}");
+            System.out.println(router.constraint);
+            request.constraintController = new ConstraintController(router.constraint);
         }
 
         {

@@ -32,6 +32,8 @@ public class Router {
 
     public static final String ROUTER_CONFIG_FILENAME = "router-config.json";
 
+    public String constraint = "{\"constraints\":[]}";
+
     public String id;
     public Graph graph;
     public double[] timeouts = {50, 20, 20};
