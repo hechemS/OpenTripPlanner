@@ -6,6 +6,8 @@ import java.util.Map.Entry;
 
 import javax.ws.rs.core.UriInfo;
 
+import org.opentripplanner.api.geojson.Feature;
+import org.opentripplanner.api.geojson.FeatureCollection;
 import org.opentripplanner.api.model.TripPlan;
 import org.opentripplanner.api.model.error.PlannerError;
 
@@ -14,6 +16,7 @@ public class Response {
 
     /** A dictionary of the parameters provided in the request that triggered this response. */
     public HashMap<String, String> requestParameters;
+
     private TripPlan plan;
     private PlannerError error = null;
 
@@ -21,7 +24,7 @@ public class Response {
     public DebugOutput debugOutput = null;
 
     public ElevationMetadata elevationMetadata = null;
-
+    public FeatureCollection featureCollection;
     /** This no-arg constructor exists to make JAX-RS happy. */ 
     @SuppressWarnings("unused")
     private Response() {};
@@ -50,6 +53,7 @@ public class Response {
 
     public void setPlan(TripPlan plan) {
         this.plan = plan;
+        this.featureCollection = FeatureCollection.fromPlan(plan);
     }
 
     /** The error (if any) that this response raised. */

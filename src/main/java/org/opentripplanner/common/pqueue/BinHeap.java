@@ -92,7 +92,7 @@ public class BinHeap<T> {
     }
 
     public void dump() {
-    	for (int i=0; i<=capacity; i++) {
+    	for (int i=0; i<=size; i++) {
     		String topMarker = (i > size) ? "(UNUSED)" : ""; 
         	System.out.printf("%d\t%f\t%s\t%s\n", i, prio[i], elem[i], topMarker);
     	}

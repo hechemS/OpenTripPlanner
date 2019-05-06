@@ -32,7 +32,6 @@ import state.SimpleTraverseMode;
  * Always make one new instance of this class per request, it contains a lot of state fields.
  */
 public class AStar {
-
     private static final Logger LOG = LoggerFactory.getLogger(AStar.class);
     // FIXME this is not really a factory, it's a way to fake a global variable. This should be stored at the OTPServer level.
     private static final MonitoringStore store = MonitoringStoreFactory.getStore();
@@ -95,10 +94,6 @@ public class AStar {
     private void startSearch(RoutingRequest options,
             SearchTerminationStrategy terminationStrategy, long abortTime, boolean addToQueue) {
 
-        String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"WALK\"},\"condition\":{\"conditionType\":\"value\",\"valueConditionType\":\"DISTANCE\",\"value\":1000.0,\"minimum\":false}}]}";
-        //String json = "{\"constraints\":[{\"constraintType\":\"single\",\"identifier\":{\"identifierType\":\"mode\",\"transportMode\":\"PUBLIC_TRANSPORT\"},\"condition\":{\"conditionType\":\"empty\"},\"previousResults\":{},\"cacheHits\":0,\"cacheMisses\":0}]}";
-
-
         runState = new RunState( options, terminationStrategy );
         runState.rctx = options.getRoutingContext();
         runState.spt = options.getNewShortestPathTree();
@@ -137,7 +132,12 @@ public class AStar {
         }
     }
 
+    private static int count = 0;
     boolean iterate(){
+        if(count++ < 100) {
+            //runState.pq.dump();
+        }
+
         // print debug info
         if (verbose) {
             double w = runState.pq.peek_min_key();
@@ -152,7 +152,7 @@ public class AStar {
         
         // check that this state has not been dominated
         // and mark vertex as visited
-        if (!runState.spt.visit(runState.u) || !fullfillsConstraints(runState.u)) {
+        if (!runState.spt.visit(runState.u)) {
             // state has been dominated since it was added to the priority queue, so it is
             // not in any optimal path. drop it on the floor and try the next one.
             return false;
@@ -171,7 +171,6 @@ public class AStar {
         
         Collection<Edge> edges = runState.options.arriveBy ? runState.u_vertex.getIncoming() : runState.u_vertex.getOutgoing();
         for (Edge edge : edges) {
-
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
             // returning NULL), the iteration is over. TODO Use this to board multiple trips.
             for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
@@ -183,10 +182,19 @@ public class AStar {
 
                 double remaining_w = runState.heuristic.estimateRemainingWeight(v);
 
-//                LOG.info("{} {}", v, remaining_w);
+                /*
+                if(fullfillsConstraints(v)) {
+                    //LOG.info("{} {}", v, remaining_w);
+                } else {
+                    continue;
+                }*/
+
 
                 if (remaining_w < 0 || Double.isInfinite(remaining_w)) {
                     continue;
+                }
+                if(!fullfillsConstraints(runState.u)) {
+                    remaining_w += 100000;
                 }
                 double estimate = v.getWeight() + remaining_w;
 
@@ -217,6 +225,9 @@ public class AStar {
                     if (traverseVisitor != null)
                         traverseVisitor.visitEnqueue(v);
                     //LOG.info("u.w={} v.w={} h={}", runState.u.weight, v.weight, remaining_w);
+                    if(estimate > 50000) {
+                        LOG.info("u.w={} v.w={} h={}", runState.u.weight, v.weight, remaining_w);
+                    }
                     runState.pq.insert(v, estimate);
                 } 
             }
@@ -374,9 +385,12 @@ public class AStar {
         return ret;
     }
 
+    private static int fullfills_count = 0;
     private boolean fullfillsConstraints(State v) {
         if (false) return true;
+        fullfills_count++;
         SimpleState s = v.toSimpleState();
+        Gson gson = new Gson();
         boolean fullfills = runState.options.constraintController.fullfillsConstraints(s);
         return fullfills;
         //return true;
