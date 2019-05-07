@@ -307,7 +307,7 @@ public class AStar {
 
         SimpleState ss = runState.u.toSimpleState();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        System.out.println(gson.toJson(ss));
+        //System.out.println(gson.toJson(ss));
         Map<SimpleTraverseMode, Double> map = new HashMap<>();
         System.out.println("########Distances########");
         ss.logDistances(map);
