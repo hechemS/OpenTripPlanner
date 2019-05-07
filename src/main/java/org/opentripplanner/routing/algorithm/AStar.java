@@ -132,12 +132,7 @@ public class AStar {
         }
     }
 
-    private static int count = 0;
     boolean iterate(){
-        if(count++ < 100) {
-            //runState.pq.dump();
-        }
-
         // print debug info
         if (verbose) {
             double w = runState.pq.peek_min_key();
@@ -171,6 +166,7 @@ public class AStar {
         
         Collection<Edge> edges = runState.options.arriveBy ? runState.u_vertex.getIncoming() : runState.u_vertex.getOutgoing();
         for (Edge edge : edges) {
+
             // Iterate over traversal results. When an edge leads nowhere (as indicated by
             // returning NULL), the iteration is over. TODO Use this to board multiple trips.
             for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
@@ -188,14 +184,10 @@ public class AStar {
                 } else {
                     continue;
                 }*/
-
-
-                if (remaining_w < 0 || Double.isInfinite(remaining_w)) {
+                if (remaining_w < 0 || Double.isInfinite(remaining_w) || !fullfillsConstraints(v)) {
                     continue;
                 }
-                if(!fullfillsConstraints(runState.u)) {
-                    remaining_w += 100000;
-                }
+
                 double estimate = v.getWeight() + remaining_w;
 
                 if (verbose) {
@@ -225,11 +217,8 @@ public class AStar {
                     if (traverseVisitor != null)
                         traverseVisitor.visitEnqueue(v);
                     //LOG.info("u.w={} v.w={} h={}", runState.u.weight, v.weight, remaining_w);
-                    if(estimate > 50000) {
-                        LOG.info("u.w={} v.w={} h={}", runState.u.weight, v.weight, remaining_w);
-                    }
                     runState.pq.insert(v, estimate);
-                } 
+                }
             }
         }
         
@@ -318,7 +307,7 @@ public class AStar {
 
         SimpleState ss = runState.u.toSimpleState();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        //System.out.println(gson.toJson(ss));
+        System.out.println(gson.toJson(ss));
         Map<SimpleTraverseMode, Double> map = new HashMap<>();
         System.out.println("########Distances########");
         ss.logDistances(map);

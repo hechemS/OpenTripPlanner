@@ -854,6 +854,9 @@ public class State implements Cloneable {
         if(this.getBackMode() != null) s.setBackMode(this.getBackMode().toSimpleTraverseMode());
         if(this.getBackState() != null) s.setBackState(this.getBackState().toSimpleState());
         if(this.getBackEdge() != null) s.setDistance(this.backEdge.getDistance());
+        if(this.stateData != null && this.stateData.tripId != null) {
+            s.setLine(FeedScopedId.convertToString(this.stateData.route));
+        }
         return s;
     }
 }
