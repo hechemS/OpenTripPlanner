@@ -431,6 +431,7 @@ public abstract class RoutingResource {
             request.setToString(toPlace);
 
         if (constraint != null) {
+            System.out.println(constraint);
             request.constraintController = new ConstraintController(constraint);
         } else {
             System.out.println(router.constraint);
