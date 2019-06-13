@@ -4,6 +4,7 @@ import java.util.*;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.pqueue.BinHeap;
 import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.SearchTerminationStrategy;
@@ -379,7 +380,11 @@ public class AStar {
         if (false) return true;
         fullfills_count++;
         SimpleState s = v.toSimpleState();
-        Gson gson = new Gson();
+        GenericLocation loc = runState.options.to;
+        /*if(loc.lat == v.getVertex().getLat() && loc.lng == v.getVertex().getLon()) {
+            System.out.println("FINISHED ROUTE");
+            s.setFullRoute(true);
+        }*/
         boolean fullfills = runState.options.constraintController.fullfillsConstraints(s);
         return fullfills;
         //return true;

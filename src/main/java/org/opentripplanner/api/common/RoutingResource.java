@@ -15,6 +15,7 @@ import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.OptimizeType;
 import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.request.BannedStopSet;
 import org.opentripplanner.standalone.OTPServer;
 import org.opentripplanner.standalone.Router;
@@ -589,6 +590,9 @@ public abstract class RoutingResource {
         /* Temporary code to get bike/car parking and renting working. */
         if (modes != null) {
             modes.applyToRoutingRequest(request);
+            if(!router.constraint.equals("{\"constraints\":[]}")) {
+                request.modes.setWalk(true);
+            }
             request.setModes(request.modes);
         }
 
