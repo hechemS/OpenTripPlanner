@@ -1,8 +1,6 @@
 package org.opentripplanner.routing.core;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Stop;
@@ -61,6 +59,8 @@ public class StateData implements Cloneable {
 
     protected TraverseMode nonTransitMode;
 
+    protected List<TraverseMode> nonTransitModes;
+
     /** 
      * This is the wait time at the beginning of the trip (or at the end of the trip for
      * reverse searches). In Analyst anyhow, this is is subtracted from total trip length of each
@@ -89,14 +89,24 @@ public class StateData implements Cloneable {
 
     public StateData(RoutingRequest options) {
         TraverseModeSet modes = options.modes;
+        nonTransitModes = new ArrayList<>();
+
         if (modes.getCar())
             nonTransitMode = TraverseMode.CAR;
-        else if (modes.getWalk())
-            nonTransitMode = TraverseMode.WALK;
+
         else if (modes.getBicycle())
             nonTransitMode = TraverseMode.BICYCLE;
+        else if (modes.getWalk())
+            nonTransitMode = TraverseMode.WALK;
         else
             nonTransitMode = null;
+
+        if (modes.getCar())
+            nonTransitModes.add(TraverseMode.CAR);
+        if (modes.getBicycle())
+            nonTransitModes.add(TraverseMode.BICYCLE);
+        if (modes.getWalk())
+            nonTransitModes.add(TraverseMode.WALK);
     }
 
     protected StateData clone() {

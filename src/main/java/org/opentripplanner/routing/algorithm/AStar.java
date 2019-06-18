@@ -12,6 +12,7 @@ import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHe
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.*;
@@ -167,58 +168,55 @@ public class AStar {
         
         Collection<Edge> edges = runState.options.arriveBy ? runState.u_vertex.getIncoming() : runState.u_vertex.getOutgoing();
         for (Edge edge : edges) {
+            List<TraverseMode> modes = runState.u.getNonTransitModes();
+            if(modes.size() == 0) modes.add(null);
+            for(TraverseMode mode : modes) {
+                runState.u.setNonTransitMode(mode);
+                // Iterate over traversal results. When an edge leads nowhere (as indicated by
+                // returning NULL), the iteration is over. TODO Use this to board multiple trips.
+                for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
+                    // Could be: for (State v : traverseEdge...)
+                    if (traverseVisitor != null) {
+                        traverseVisitor.visitEdge(edge, v);
+                    }
 
-            // Iterate over traversal results. When an edge leads nowhere (as indicated by
-            // returning NULL), the iteration is over. TODO Use this to board multiple trips.
-            for (State v = edge.traverse(runState.u); v != null; v = v.getNextResult()) {
-                // Could be: for (State v : traverseEdge...)
+                    double remaining_w = runState.heuristic.estimateRemainingWeight(v);
 
-                if (traverseVisitor != null) {
-                    traverseVisitor.visitEdge(edge, v);
-                }
+                    if (remaining_w < 0 || Double.isInfinite(remaining_w) || !fullfillsConstraints(v)) {
+                        continue;
+                    }
 
-                double remaining_w = runState.heuristic.estimateRemainingWeight(v);
+                    double estimate = v.getWeight() + remaining_w;
 
-                /*
-                if(fullfillsConstraints(v)) {
-                    //LOG.info("{} {}", v, remaining_w);
-                } else {
-                    continue;
-                }*/
-                if (remaining_w < 0 || Double.isInfinite(remaining_w) || !fullfillsConstraints(v)) {
-                    continue;
-                }
+                    if (verbose) {
+                        System.out.println("      edge " + edge);
+                        System.out.println("      " + runState.u.getWeight() + " -> " + v.getWeight()
+                                + "(w) + " + remaining_w + "(heur) = " + estimate + " vert = "
+                                + v.getVertex());
+                    }
 
-                double estimate = v.getWeight() + remaining_w;
+                    // avoid enqueuing useless branches
+                    if (estimate > runState.options.maxWeight) {
+                        // too expensive to get here
+                        if (verbose)
+                            System.out.println("         too expensive to reach, not enqueued. estimated weight = " + estimate);
+                        continue;
+                    }
+                    if (isWorstTimeExceeded(v, runState.options)) {
+                        // too much time to get here
+                        if (verbose)
+                            System.out.println("         too much time to reach, not enqueued. time = " + v.getTimeSeconds());
+                        continue;
+                    }
 
-                if (verbose) {
-                    System.out.println("      edge " + edge);
-                    System.out.println("      " + runState.u.getWeight() + " -> " + v.getWeight()
-                            + "(w) + " + remaining_w + "(heur) = " + estimate + " vert = "
-                            + v.getVertex());
-                }
-
-                // avoid enqueuing useless branches 
-                if (estimate > runState.options.maxWeight) {
-                    // too expensive to get here
-                    if (verbose)
-                        System.out.println("         too expensive to reach, not enqueued. estimated weight = " + estimate);
-                    continue;
-                }
-                if (isWorstTimeExceeded(v, runState.options)) {
-                    // too much time to get here
-                    if (verbose)
-                        System.out.println("         too much time to reach, not enqueued. time = " + v.getTimeSeconds());
-                    continue;
-                }
-                
-                // spt.add returns true if the state is hopeful; enqueue state if it's hopeful
-                if (runState.spt.add(v)) {
-                    // report to the visitor if there is one
-                    if (traverseVisitor != null)
-                        traverseVisitor.visitEnqueue(v);
-                    //LOG.info("u.w={} v.w={} h={}", runState.u.weight, v.weight, remaining_w);
-                    runState.pq.insert(v, estimate);
+                    // spt.add returns true if the state is hopeful; enqueue state if it's hopeful
+                    if (runState.spt.add(v)) {
+                        // report to the visitor if there is one
+                        if (traverseVisitor != null)
+                            traverseVisitor.visitEnqueue(v);
+                        //LOG.info("u.w={} v.w={} h={}", runState.u.weight, v.weight, remaining_w);
+                        runState.pq.insert(v, estimate);
+                    }
                 }
             }
         }
@@ -308,7 +306,7 @@ public class AStar {
 
         SimpleState ss = runState.u.toSimpleState();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        //System.out.println(gson.toJson(ss));
+        System.out.println(gson.toJson(ss));
         Map<SimpleTraverseMode, Double> map = new HashMap<>();
         System.out.println("########Distances########");
         ss.logDistances(map);
@@ -380,6 +378,7 @@ public class AStar {
         if (false) return true;
         fullfills_count++;
         SimpleState s = v.toSimpleState();
+        //System.out.println((new Gson()).toJson(s));
         GenericLocation loc = runState.options.to;
         /*if(loc.lat == v.getVertex().getLat() && loc.lng == v.getVertex().getLon()) {
             System.out.println("FINISHED ROUTE");

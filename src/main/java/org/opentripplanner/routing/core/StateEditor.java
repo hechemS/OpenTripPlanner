@@ -429,6 +429,7 @@ public class StateEditor {
     public void setNonTransitOptionsFromState(State state){
         cloneStateDataAsNeeded();
         child.stateData.nonTransitMode = state.getNonTransitMode();
+        child.stateData.nonTransitModes = state.getNonTransitModes();
         child.stateData.carParked = state.isCarParked();
         child.stateData.bikeParked = state.isBikeParked();
         child.stateData.usingRentedBike = state.isBikeRenting();

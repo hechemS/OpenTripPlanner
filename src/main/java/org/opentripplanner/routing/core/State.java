@@ -1,6 +1,7 @@
 package org.opentripplanner.routing.core;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -469,7 +470,16 @@ public class State implements Cloneable {
      *         to a rented bicycle.
      */
     public TraverseMode getNonTransitMode() {
+
         return stateData.nonTransitMode;
+    }
+
+    public void setNonTransitMode(TraverseMode mode) {
+        stateData.nonTransitMode = mode;
+    }
+
+    public List<TraverseMode> getNonTransitModes() {
+        return stateData.nonTransitModes;
     }
     // TODO: There is no documentation about what this means. No one knows precisely.
     // Needs to be replaced with clearly defined fields.
