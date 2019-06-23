@@ -465,7 +465,7 @@
             <artifactId>jsondesign</artifactId>
             <version>1.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/jsondesign.jar</systemPath>
+            <systemPath>${project.basedir}/src/main/resources/constraintchecker.jar</systemPath>
         </dependency> -->
         <!-- Logging library, implements slf4j logging API -->
         <dependency>
