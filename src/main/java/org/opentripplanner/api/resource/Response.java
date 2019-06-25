@@ -1,5 +1,6 @@
 package org.opentripplanner.api.resource;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -8,6 +9,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.opentripplanner.api.geojson.Feature;
 import org.opentripplanner.api.geojson.FeatureCollection;
+import org.opentripplanner.api.model.Itinerary;
 import org.opentripplanner.api.model.TripPlan;
 import org.opentripplanner.api.model.error.PlannerError;
 
@@ -24,7 +26,7 @@ public class Response {
     public DebugOutput debugOutput = null;
 
     public ElevationMetadata elevationMetadata = null;
-    public FeatureCollection featureCollection;
+    public List<FeatureCollection> featureCollections;
     /** This no-arg constructor exists to make JAX-RS happy. */ 
     @SuppressWarnings("unused")
     private Response() {};
@@ -53,7 +55,11 @@ public class Response {
 
     public void setPlan(TripPlan plan) {
         this.plan = plan;
-        this.featureCollection = FeatureCollection.fromPlan(plan);
+        this.featureCollections = new ArrayList<>();
+
+        for(Itinerary i : plan.itinerary) {
+            featureCollections.add(FeatureCollection.fromitinerary(i));
+        }
     }
 
     /** The error (if any) that this response raised. */

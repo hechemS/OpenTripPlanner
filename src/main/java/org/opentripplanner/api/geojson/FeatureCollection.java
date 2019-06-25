@@ -15,13 +15,7 @@ public class FeatureCollection {
         this.features = features;
     }
 
-    public static FeatureCollection fromPlan(TripPlan plan) {
-        if(plan.itinerary.isEmpty()) {
-            return new FeatureCollection(null);
-        }
-
-        Itinerary itinerary = plan.itinerary.get(0);
-
+    public static FeatureCollection fromitinerary(Itinerary itinerary) {
         List<Feature> features = new ArrayList<>();
         for(Leg leg : itinerary.legs) {
             features.add(Feature.fromLeg(leg));
