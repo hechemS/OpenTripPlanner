@@ -159,7 +159,31 @@ public abstract class GraphPathToTripPlanConverter {
         for (State[] legStates : legsStates) {
             itinerary.addLeg(generateLeg(graph, legStates, showIntermediateStops, disableAlertFiltering, requestedLocale));
         }
+        
+        double biggestBikeDistance = 0.0;
+        int biggestBikeID= -1;
 
+        for (Leg leg : itinerary.legs) {
+			if(leg.mode == TraverseMode.BICYCLE.toString()) {
+				//if this is a bike leg
+				System.out.println("Habemus bike leg");
+				if(leg.distance > biggestBikeDistance) {
+					biggestBikeDistance = leg.distance;
+					biggestBikeID = itinerary.legs.indexOf(leg);
+				}
+			}
+		}
+        
+        for (int i = 0; i < itinerary.legs.size(); i++) {
+			Leg currentLeg = itinerary.legs.get(i);
+			if (i != biggestBikeID && currentLeg.mode == TraverseMode.BICYCLE.toString()) {
+				//we are currently on a bike leg, which is not the biggest one. Let's make it walk instead. 
+				currentLeg.mode = TraverseMode.WALK.toString();
+				System.out.println("Changed leg " + i + " to walk");
+			//	currentLeg.endTime = makeCalendar(timeZone, timeMillis)
+			}
+		}
+        
         addWalkSteps(graph, itinerary.legs, legsStates, requestedLocale);
 
         fixupLegs(itinerary.legs, legsStates);
