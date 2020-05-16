@@ -590,9 +590,8 @@ public abstract class RoutingResource {
         /* Temporary code to get bike/car parking and renting working. */
         if (modes != null) {
             modes.applyToRoutingRequest(request);
-            if(!router.constraint.equals("{\"constraints\":[]}")) {
-                request.modes.setWalk(true);
-            }
+            /* Walking is always possible */
+            request.modes.setWalk(true);
             request.setModes(request.modes);
         }
 

@@ -8,6 +8,7 @@ import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.NamedPlace;
+import org.opentripplanner.routing.controller.RequestController;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.graph.Edge;
@@ -25,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -72,6 +72,9 @@ public class RoutingRequest implements Cloneable, Serializable {
     public GenericLocation to;
 
     public ConstraintController constraintController;
+
+    public RequestController requestController;
+
     /** An ordered list of intermediate locations to be visited. */
     public List<GenericLocation> intermediatePlaces;
 
@@ -1498,6 +1501,14 @@ public class RoutingRequest implements Cloneable, Serializable {
             return new DurationComparator();
         }
         return new PathComparator(compareStartTimes);
+    }
+
+    public void selectController(RequestController requestController) {
+        this.requestController = requestController;
+    }
+
+    public void configureRequest() {
+        requestController.configure(this);
     }
 
 }

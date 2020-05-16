@@ -5,6 +5,7 @@ import org.opentripplanner.api.common.RoutingResource;
 import org.opentripplanner.api.model.TripPlan;
 import org.opentripplanner.api.model.error.PlannerError;
 import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.controller.ControllerPolicy;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.standalone.Router;
@@ -67,6 +68,10 @@ public class PlannerResource extends RoutingResource {
             /* Fill in request fields from query parameters via shared superclass method, catching any errors. */
             request = super.buildRequest();
             router = otpServer.getRouter(request.routerId);
+
+            /* Configure request fields and constraints based on a time policy */
+            ControllerPolicy.selectController(request);
+            request.configureRequest();
 
             /* Find some good GraphPaths through the OTP Graph. */
             GraphPathFinder gpFinder = new GraphPathFinder(router); // we could also get a persistent router-scoped GraphPathFinder but there's no setup cost here
