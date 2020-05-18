@@ -182,11 +182,11 @@ public class AStar {
 
                     double remaining_w = runState.heuristic.estimateRemainingWeight(v);
 
-                    if (remaining_w < 0 || Double.isInfinite(remaining_w) || !fullfillsConstraints(v)) {
+                    if (remaining_w < 0 || Double.isInfinite(remaining_w) || !fullfillsConstraints(v, runState.rctx)) {
                         continue;
                     }
 
-                    double estimate = v.getWeight() + remaining_w;
+                    double estimate = v.getWeight() + remaining_w + calculatePenalty(v, runState.rctx);
 
                     if (verbose) {
                         System.out.println("      edge " + edge);
@@ -304,9 +304,8 @@ public class AStar {
         
         storeMemory();
 
-        SimpleState ss = runState.u.toSimpleState();
+        SimpleState ss = runState.u.toSimpleState(runState.rctx);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        //System.out.println(gson.toJson(ss));
         Map<SimpleTraverseMode, Double> map = new HashMap<>();
         System.out.println("------------------------------------------------------------------------------------------------");
         System.out.println("########Distances########");
@@ -374,19 +373,13 @@ public class AStar {
         return ret;
     }
 
-    private static int fullfills_count = 0;
-    private boolean fullfillsConstraints(State v) {
-        if (false) return true;
-        fullfills_count++;
-        SimpleState s = v.toSimpleState();
-        //System.out.println((new Gson()).toJson(s));
-        GenericLocation loc = runState.options.to;
-        /*if(loc.lat == v.getVertex().getLat() && loc.lng == v.getVertex().getLon()) {
-            System.out.println("FINISHED ROUTE");
-            s.setFullRoute(true);
-        }*/
-        boolean fullfills = runState.options.constraintController.fullfillsConstraints(s);
-        return fullfills;
-        //return true;
+    private boolean fullfillsConstraints(State v, RoutingContext rctx) {
+        SimpleState s = v.toSimpleState(rctx);
+        return runState.options.constraintController.fullfillsConstraints(s);
+    }
+
+    private int calculatePenalty(State v, RoutingContext rctx) {
+        SimpleState s = v.toSimpleState(rctx);
+        return  runState.options.constraintController.calculatePenalty(s);
     }
 }

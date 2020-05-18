@@ -856,16 +856,19 @@ public class State implements Cloneable {
         return stateData.enteredNoThroughTrafficArea;
     }
 
-    public SimpleState toSimpleState() {
+    public SimpleState toSimpleState(RoutingContext rtcx) {
         SimpleState s = new SimpleState();
         s.setUuid(this.getUuid());
         s.setTime(this.getTimeInMillis());
         if(this.getVertex() != null) s.setVertex(this.getVertex().toSimpleVertex());
         if(this.getBackMode() != null) s.setBackMode(this.getBackMode().toSimpleTraverseMode());
-        if(this.getBackState() != null) s.setBackState(this.getBackState().toSimpleState());
+        if(this.getBackState() != null) s.setBackState(this.getBackState().toSimpleState(rtcx));
         if(this.getBackEdge() != null) s.setDistance(this.backEdge.getDistance());
         if(this.stateData != null && this.stateData.tripId != null) {
             s.setLine(FeedScopedId.convertToString(this.stateData.route));
+        }
+        if (this.getVertex() == rtcx.target && this.isFinal()) {
+            s.setFullRoute(true);
         }
         return s;
     }
