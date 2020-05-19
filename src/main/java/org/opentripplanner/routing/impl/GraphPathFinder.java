@@ -11,6 +11,8 @@ import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic
 import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHeuristic;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.edgetype.LegSwitchingEdge;
 import org.opentripplanner.routing.edgetype.TransitBoardAlight;
 import org.opentripplanner.routing.error.PathNotFoundException;
@@ -367,16 +369,17 @@ public class GraphPathFinder {
 
         List<GraphPath> paths = null;
         try {
-            paths = getGraphPathsConsideringIntermediates(request);
+            paths = getGraphPathConsideringBikeLocation(request);
             if (paths == null && request.wheelchairAccessible) {
                 // There are no paths that meet the user's slope restrictions.
                 // Try again without slope restrictions, and warn the user in the response.
                 RoutingRequest relaxedRequest = request.clone();
                 relaxedRequest.maxSlope = Double.MAX_VALUE;
                 request.rctx.slopeRestrictionRemoved = true;
-                paths = getGraphPathsConsideringIntermediates(relaxedRequest);
+                paths = getGraphPathConsideringBikeLocation(relaxedRequest);
             }
             request.rctx.debugOutput.finishedCalculating();
+
         } catch (VertexNotFoundException e) {
             LOG.info("Vertex not found: " + request.from + " : " + request.to);
             throw e;
@@ -410,6 +413,111 @@ public class GraphPathFinder {
         }
 
         return paths;
+    }
+
+    /**
+     * Break up a RoutingRequest with intermediate bike location into two separate requests,
+     * before and after the position of the bike.
+     *
+     * If there is no bike location, issue a single request. Otherwise process the two requests
+     *  either from left to right (if {@code request.arriveBy==false})
+     * or from right to left (if {@code request.arriveBy==true}). In the latter case the order of
+     * the requested paths is (bikeLocation, to), and (from, bikeLocation).
+     */
+    DebugOutput debugOutput = null;
+
+    private List<GraphPath> getGraphPathConsideringBikeLocation (RoutingRequest request) {
+        Collection<Vertex> temporaryVertices = new ArrayList<>();
+        if (request.hasBikeLocation()) {
+            GraphPath pathAfterBike;
+            GraphPath pathBeforeBike;
+            if (request.arriveBy) {
+                pathAfterBike = getGraphPathAfterBike(request, temporaryVertices, request.dateTime);
+                if (pathAfterBike == null) {
+                    return new ArrayList<GraphPath>();
+                }
+                pathBeforeBike = getGraphPathBeforeBike(request, temporaryVertices, pathAfterBike.getStartTime());
+                if (pathBeforeBike == null) {
+                    return new ArrayList<GraphPath>();
+                }
+            } else {
+                pathBeforeBike = getGraphPathBeforeBike(request, temporaryVertices, request.dateTime);
+                if (pathBeforeBike == null) {
+                    return new ArrayList<GraphPath>();
+                }
+                pathAfterBike = getGraphPathAfterBike(request, temporaryVertices, pathBeforeBike.getEndTime());
+                if (pathAfterBike == null) {
+                    return new ArrayList<GraphPath>();
+                }
+            }
+            request.setRoutingContext(router.graph);
+            request.rctx.debugOutput = debugOutput;
+            debugOutput = null;
+            return Collections.singletonList(joinParts(pathBeforeBike, pathAfterBike));
+        } else {
+            return getPaths(request);
+        }
+    }
+
+    private GraphPath getGraphPathBeforeBike (RoutingRequest request, Collection<Vertex> temporaryVertices, long time) {
+        RoutingRequest intermediateRequest = request.clone();
+        intermediateRequest.setNumItineraries(1);
+        intermediateRequest.dateTime = time;
+        intermediateRequest.from = request.from;
+        intermediateRequest.to = request.bikeLocation;
+        intermediateRequest.rctx = null;
+        intermediateRequest.setRoutingContext(router.graph, temporaryVertices);
+        intermediateRequest.modes.setBicycle(false);
+        if (debugOutput != null) {
+            intermediateRequest.rctx.debugOutput = debugOutput;
+        } else {
+            debugOutput = intermediateRequest.rctx.debugOutput;
+        }
+        List<GraphPath> paths = getPaths(intermediateRequest);
+        if (paths.size() == 0) {
+            return null;
+        } else {
+            return paths.get(0);
+        }
+    }
+
+    private GraphPath getGraphPathAfterBike (RoutingRequest request, Collection<Vertex> temporaryVertices, long time) {
+        RoutingRequest intermediateRequest = request.clone();
+        intermediateRequest.setNumItineraries(1);
+        intermediateRequest.dateTime = time;
+        intermediateRequest.from = request.bikeLocation;
+        intermediateRequest.to = request.to;
+        intermediateRequest.rctx = null;
+        intermediateRequest.setRoutingContext(router.graph, temporaryVertices);
+        intermediateRequest.setModes(new TraverseModeSet("BICYCLE"));
+        if (debugOutput != null) {
+            intermediateRequest.rctx.debugOutput = debugOutput;
+        } else {
+            debugOutput = intermediateRequest.rctx.debugOutput;
+        }
+        List<GraphPath> paths = getPaths(intermediateRequest);
+        if (paths.size() == 0) {
+            return null;
+        } else {
+            return paths.get(0);
+        }
+    }
+
+    private static GraphPath joinParts(GraphPath beforePath, GraphPath afterPath) {
+        State lastState = beforePath.states.getLast();
+        Vertex lastVertex = lastState.getVertex();
+        LegSwitchingEdge legSwitchingEdge = new LegSwitchingEdge(lastVertex, lastVertex);
+        afterPath.states.getFirst().backEdge = legSwitchingEdge;
+        afterPath.states.getFirst().setBackMode(TraverseMode.WALK);
+        GraphPath newPath = new GraphPath(lastState, false);
+        for (State s: afterPath.states) {
+            newPath.states.add(s);
+        }
+        newPath.edges.add(legSwitchingEdge);
+        for (Edge e: afterPath.edges) {
+            newPath.edges.add(e);
+        }
+        return newPath;
     }
 
     /**

@@ -368,6 +368,8 @@ public class State implements Cloneable {
     public TraverseMode getBackMode () {
         return stateData.backMode;
     }
+
+    public void setBackMode(TraverseMode mode) { stateData.backMode = mode; }
     
     public boolean isBackWalkingBike () {
         return stateData.backWalkingBike;
