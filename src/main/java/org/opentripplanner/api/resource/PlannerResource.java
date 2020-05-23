@@ -6,7 +6,8 @@ import org.opentripplanner.api.model.TripPlan;
 import org.opentripplanner.api.model.error.PlannerError;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.controller.ControllerPolicy;
-import org.opentripplanner.routing.impl.GraphPathFinder;
+import org.opentripplanner.routing.impl.PathFinder.PathFinder;
+import org.opentripplanner.routing.impl.PathFinder.PathFinderPolicy;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.standalone.Router;
 import org.slf4j.Logger;
@@ -74,7 +75,7 @@ public class PlannerResource extends RoutingResource {
             request.configureRequest();
 
             /* Find some good GraphPaths through the OTP Graph. */
-            GraphPathFinder gpFinder = new GraphPathFinder(router); // we could also get a persistent router-scoped GraphPathFinder but there's no setup cost here
+            PathFinder gpFinder = PathFinderPolicy.selectPathFinder(request, router);
             paths = gpFinder.graphPathFinderEntryPoint(request);
 
             /* Convert the internal GraphPaths to a TripPlan object that is included in an OTP web service Response. */
