@@ -85,31 +85,31 @@ public class BikeToDestinationPathFinder extends PathFinder {
     private List<GraphPath> getGraphPathConsideringBikeLocation (RoutingRequest request) {
         Collection<Vertex> temporaryVertices = new ArrayList<>();
         if (request.hasBikeLocation()) {
-            GraphPath pathAfterBike;
-            GraphPath pathBeforeBike;
+            GraphPath pathFromBike;
+            GraphPath pathToBike;
             if (request.arriveBy) {
-                pathAfterBike = getGraphPathFromBike(request, temporaryVertices, request.dateTime);
-                if (pathAfterBike == null) {
+                pathFromBike = getGraphPathFromBike(request, temporaryVertices, request.dateTime);
+                if (pathFromBike == null) {
                     return new ArrayList<GraphPath>();
                 }
-                pathBeforeBike = getGraphPathToBike(request, temporaryVertices, pathAfterBike.getStartTime());
-                if (pathBeforeBike == null) {
+                pathToBike = getGraphPathToBike(request, temporaryVertices, pathFromBike.getStartTime());
+                if (pathToBike == null) {
                     return new ArrayList<GraphPath>();
                 }
             } else {
-                pathBeforeBike = getGraphPathToBike(request, temporaryVertices, request.dateTime);
-                if (pathBeforeBike == null) {
+                pathToBike = getGraphPathToBike(request, temporaryVertices, request.dateTime);
+                if (pathToBike == null) {
                     return new ArrayList<GraphPath>();
                 }
-                pathAfterBike = getGraphPathFromBike(request, temporaryVertices, pathBeforeBike.getEndTime());
-                if (pathAfterBike == null) {
+                pathFromBike = getGraphPathFromBike(request, temporaryVertices, pathToBike.getEndTime());
+                if (pathFromBike == null) {
                     return new ArrayList<GraphPath>();
                 }
             }
             request.setRoutingContext(router.graph);
             request.rctx.debugOutput = debugOutput;
             debugOutput = null;
-            return Collections.singletonList(joinParts(pathBeforeBike, pathAfterBike));
+            return Collections.singletonList(joinParts(pathToBike, pathFromBike));
         } else {
             return getPaths(request);
         }

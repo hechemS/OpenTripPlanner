@@ -11,10 +11,8 @@ public class PathFinderPolicy {
             double distanceToOrigin = distance(request.from, request.bikeLocation);
             double distanceToDestination = distance(request.bikeLocation, request.to);
             if (request.modes.getBicycle() && distanceToOrigin < 500) {
-                System.out.println("walk to bike");
                 return new WalkToBikePathFinder(router);
             } else if (request.modes.getBicycle() && distanceToDestination < 3000) {
-                System.out.println("bike to destination");
                 return new BikeToDestinationPathFinder(router);
             } else {
                 request.modes.setBicycle(false);
