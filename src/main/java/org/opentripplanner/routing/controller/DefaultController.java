@@ -13,10 +13,6 @@ public class DefaultController extends RequestController {
 
     @Override
     public void configure(RoutingRequest request) {
-        // bike available at the start of the trip
-        if (bikeAccessible(request, 20)) {
-            request.bikeLocation = null;
-        }
         // set constraints.
         List<Constraint> constraints = new ArrayList<>();
         constraints.add(singleBikeUsageConstraint());

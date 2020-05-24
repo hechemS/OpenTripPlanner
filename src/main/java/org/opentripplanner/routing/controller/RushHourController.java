@@ -13,10 +13,6 @@ public class RushHourController extends RequestController {
 
     @Override
     public void configure(RoutingRequest request) {
-        // bike available at the start of the trip
-        if (bikeAccessible(request, 20)) {
-            request.bikeLocation = null;
-        }
         // avoid Marienplatz and Hauptbahnhof.
         request.setBannedStopsHard("1:de:09162:2:52:52,1:de:09162:2:51:51,1:de:09162:2:31:71" +
                 "1:de:09162:6:51:53,1:de:09162:6:51:51,1:de:09162:6:55:56,1:de:09162:6:55:55," +
