@@ -7,7 +7,7 @@ import org.opentripplanner.routing.algorithm.AStar;
 import org.opentripplanner.routing.core.Fare;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.impl.GraphPathFinder;
+import org.opentripplanner.routing.impl.PathFinder.GraphPathFinder;
 import org.opentripplanner.routing.services.FareService;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.standalone.Router;

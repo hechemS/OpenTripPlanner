@@ -71,6 +71,8 @@ public class RoutingRequest implements Cloneable, Serializable {
     /** The end location */
     public GenericLocation to;
 
+    public GenericLocation bikeLocation;
+
     public ConstraintController constraintController;
 
     public RequestController requestController;
@@ -1509,6 +1511,14 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public void configureRequest() {
         requestController.configure(this);
+    }
+
+    public void setBikeLocation(String bikeLocation) {
+        this.bikeLocation = GenericLocation.fromOldStyleString(bikeLocation);
+    }
+
+    public boolean hasBikeLocation() {
+        return bikeLocation != null;
     }
 
 }

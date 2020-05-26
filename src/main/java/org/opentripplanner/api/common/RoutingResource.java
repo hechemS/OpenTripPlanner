@@ -59,6 +59,9 @@ public abstract class RoutingResource {
     @QueryParam("toPlace")
     protected String toPlace;
 
+    @QueryParam("bikeLocation")
+    protected String bikeLocation;
+
     @QueryParam("constraint")
     protected String constraint;
 
@@ -430,6 +433,9 @@ public abstract class RoutingResource {
 
         if (toPlace != null)
             request.setToString(toPlace);
+
+        if (bikeLocation != null)
+            request.setBikeLocation(bikeLocation);
 
         if (constraint != null) {
             System.out.println(constraint);

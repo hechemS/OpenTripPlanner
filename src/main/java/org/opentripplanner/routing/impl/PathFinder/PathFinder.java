@@ -1,9 +1,9 @@
-package org.opentripplanner.routing.impl;
+package org.opentripplanner.routing.impl.PathFinder;
 
 import com.google.common.collect.Lists;
-import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.api.resource.DebugOutput;
 import org.opentripplanner.common.model.GenericLocation;
+import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.routing.algorithm.AStar;
 import org.opentripplanner.routing.algorithm.strategies.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.routing.algorithm.strategies.InterleavedBidirectionalHeuristic;
@@ -11,6 +11,8 @@ import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic
 import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHeuristic;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.edgetype.LegSwitchingEdge;
 import org.opentripplanner.routing.edgetype.TransitBoardAlight;
 import org.opentripplanner.routing.error.PathNotFoundException;
@@ -39,7 +41,7 @@ import java.util.stream.Collectors;
  * provide reasonable response times when routing over large graphs (e.g. the entire Netherlands or New York State).
  * In this case it only uses the street network at the first and last legs of the trip, and all other transfers
  * between transit vehicles will occur via SimpleTransfer edges which are pre-computed by the graph builder.
- * 
+ *
  * More information is available on the OTP wiki at:
  * https://github.com/openplans/OpenTripPlanner/wiki/LargeGraphs
  *
@@ -49,17 +51,74 @@ import java.util.stream.Collectors;
  * It is very close to being an abstract library class with only static functions. However it turns out to be convenient
  * and harmless to have the OTPServer object etc. in fields, to avoid passing context around in function parameters.
  */
-public class GraphPathFinder {
+public abstract class PathFinder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GraphPathFinder.class);
-    private static final double DEFAULT_MAX_WALK = 2000;
-    private static final double CLAMP_MAX_WALK = 15000;
+    protected static final Logger LOG = LoggerFactory.getLogger(GraphPathFinder.class);
+    protected static final double DEFAULT_MAX_WALK = 2000;
+    protected static final double CLAMP_MAX_WALK = 15000;
 
     Router router;
 
-    public GraphPathFinder(Router router) {
+    public PathFinder(Router router) {
         this.router = router;
     }
+
+    /* Try to find N paths through the Graph */
+    public List<GraphPath> graphPathFinderEntryPoint (RoutingRequest request) {
+
+        // We used to perform a protective clone of the RoutingRequest here.
+        // There is no reason to do this if we don't modify the request.
+        // Any code that changes them should be performing the copy!
+
+        List<GraphPath> paths = null;
+        try {
+            paths = getGraphPathsConsideringIntermediates(request);
+            if (paths == null && request.wheelchairAccessible) {
+                // There are no paths that meet the user's slope restrictions.
+                // Try again without slope restrictions, and warn the user in the response.
+                RoutingRequest relaxedRequest = request.clone();
+                relaxedRequest.maxSlope = Double.MAX_VALUE;
+                request.rctx.slopeRestrictionRemoved = true;
+                paths = getGraphPathsConsideringIntermediates(relaxedRequest);
+            }
+            request.rctx.debugOutput.finishedCalculating();
+
+        } catch (VertexNotFoundException e) {
+            LOG.info("Vertex not found: " + request.from + " : " + request.to);
+            throw e;
+        }
+
+        // Detect and report that most obnoxious of bugs: path reversal asymmetry.
+        // Removing paths might result in an empty list, so do this check before the empty list check.
+        if (paths != null) {
+            Iterator<GraphPath> gpi = paths.iterator();
+            while (gpi.hasNext()) {
+                GraphPath graphPath = gpi.next();
+                // TODO check, is it possible that arriveBy and time are modifed in-place by the search?
+                if (request.arriveBy) {
+                    if (graphPath.states.getLast().getTimeSeconds() > request.dateTime) {
+                        LOG.error("A graph path arrives after the requested time. This implies a bug.");
+                        gpi.remove();
+                    }
+                } else {
+                    if (graphPath.states.getFirst().getTimeSeconds() < request.dateTime) {
+                        LOG.error("A graph path leaves before the requested time. This implies a bug.");
+                        gpi.remove();
+                    }
+                }
+            }
+        }
+
+        if (paths == null || paths.size() == 0) {
+            LOG.debug("Path not found: " + request.from + " : " + request.to);
+            request.rctx.debugOutput.finishedRendering(); // make sure we still report full search time
+            throw new PathNotFoundException();
+        }
+
+        return paths;
+    }
+
+    public abstract List<GraphPath> getGraphPathsConsideringIntermediates(RoutingRequest request);
 
     /**
      * Repeatedly build shortest path trees, retaining the best path to the destination after each try.
@@ -212,10 +271,10 @@ public class GraphPathFinder {
             paths.addAll(newPaths.stream()
                     .filter(path -> {
                         double duration = options.useRequestedDateTimeInMaxHours
-                            ? options.arriveBy
+                                ? options.arriveBy
                                 ? options.dateTime - path.getStartTime()
                                 : path.getEndTime() - options.dateTime
-                            : path.getDuration();
+                                : path.getDuration();
                         return duration < options.maxHours * 60 * 60;
                     })
                     .collect(Collectors.toList()));
@@ -318,7 +377,7 @@ public class GraphPathFinder {
 
 
     private RoutingRequest createReversedTransitRequest(RoutingRequest originalReq, RoutingRequest options, Vertex fromVertex,
-                                                 Vertex toVertex, long arrDepTime, RemainingWeightHeuristic remainingWeightHeuristic){
+                                                        Vertex toVertex, long arrDepTime, RemainingWeightHeuristic remainingWeightHeuristic){
 
         RoutingRequest request = createReversedRequest(originalReq, options, fromVertex, toVertex,
                 arrDepTime, new EuclideanRemainingWeightHeuristic());
@@ -332,7 +391,7 @@ public class GraphPathFinder {
     }
 
     private RoutingRequest createReversedMainRequest(RoutingRequest originalReq, RoutingRequest options, Vertex fromVertex,
-                                                        Vertex toVertex, long dateTime, RemainingWeightHeuristic remainingWeightHeuristic){
+                                                     Vertex toVertex, long dateTime, RemainingWeightHeuristic remainingWeightHeuristic){
         RoutingRequest request = createReversedRequest(originalReq, options, fromVertex,
                 toVertex, dateTime, remainingWeightHeuristic);
         if((originalReq.parkAndRide || originalReq.kissAndRide) && originalReq.arriveBy){
@@ -359,117 +418,26 @@ public class GraphPathFinder {
     }
 
     /* Try to find N paths through the Graph */
-    public List<GraphPath> graphPathFinderEntryPoint (RoutingRequest request) {
+    //public abstract List<GraphPath> graphPathFinderEntryPoint (RoutingRequest request);
 
-        // We used to perform a protective clone of the RoutingRequest here.
-        // There is no reason to do this if we don't modify the request.
-        // Any code that changes them should be performing the copy!
-
-        List<GraphPath> paths = null;
-        try {
-            paths = getGraphPathsConsideringIntermediates(request);
-            if (paths == null && request.wheelchairAccessible) {
-                // There are no paths that meet the user's slope restrictions.
-                // Try again without slope restrictions, and warn the user in the response.
-                RoutingRequest relaxedRequest = request.clone();
-                relaxedRequest.maxSlope = Double.MAX_VALUE;
-                request.rctx.slopeRestrictionRemoved = true;
-                paths = getGraphPathsConsideringIntermediates(relaxedRequest);
-            }
-            request.rctx.debugOutput.finishedCalculating();
-        } catch (VertexNotFoundException e) {
-            LOG.info("Vertex not found: " + request.from + " : " + request.to);
-            throw e;
+    protected static GraphPath joinParts(GraphPath beforePath, GraphPath afterPath, TraverseMode traverseMode) {
+        State lastState = beforePath.states.getLast();
+        Vertex lastVertex = lastState.getVertex();
+        LegSwitchingEdge legSwitchingEdge = new LegSwitchingEdge(lastVertex, lastVertex);
+        afterPath.states.getFirst().backEdge = legSwitchingEdge;
+        afterPath.states.getFirst().setBackMode(traverseMode);
+        GraphPath newPath = new GraphPath(lastState, false);
+        for (State s: afterPath.states) {
+            newPath.states.add(s);
         }
-
-        // Detect and report that most obnoxious of bugs: path reversal asymmetry.
-        // Removing paths might result in an empty list, so do this check before the empty list check.
-        if (paths != null) {
-            Iterator<GraphPath> gpi = paths.iterator();
-            while (gpi.hasNext()) {
-                GraphPath graphPath = gpi.next();
-                // TODO check, is it possible that arriveBy and time are modifed in-place by the search?
-                if (request.arriveBy) {
-                    if (graphPath.states.getLast().getTimeSeconds() > request.dateTime) {
-                        LOG.error("A graph path arrives after the requested time. This implies a bug.");
-                        gpi.remove();
-                    }
-                } else {
-                    if (graphPath.states.getFirst().getTimeSeconds() < request.dateTime) {
-                        LOG.error("A graph path leaves before the requested time. This implies a bug.");
-                        gpi.remove();
-                    }
-                }
-            }
+        newPath.edges.add(legSwitchingEdge);
+        for (Edge e: afterPath.edges) {
+            newPath.edges.add(e);
         }
-
-        if (paths == null || paths.size() == 0) {
-            LOG.debug("Path not found: " + request.from + " : " + request.to);
-            request.rctx.debugOutput.finishedRendering(); // make sure we still report full search time
-            throw new PathNotFoundException();
-        }
-
-        return paths;
+        return newPath;
     }
 
-    /**
-     * Break up a RoutingRequest with intermediate places into separate requests, in the given order.
-     *
-     * If there are no intermediate places, issue a single request. Otherwise process the places
-     * list [from, i1, i2, ..., to] either from left to right (if {@code request.arriveBy==false})
-     * or from right to left (if {@code request.arriveBy==true}). In the latter case the order of
-     * the requested subpaths is (i2, to), (i1, i2), and (from, i1) which has to be reversed at
-     * the end.
-     */
-    private List<GraphPath> getGraphPathsConsideringIntermediates (RoutingRequest request) {
-        Collection<Vertex> temporaryVertices = new ArrayList<>();
-        if (request.hasIntermediatePlaces()) {
-            List<GenericLocation> places = Lists.newArrayList(request.from);
-            places.addAll(request.intermediatePlaces);
-            places.add(request.to);
-            long time = request.dateTime;
-
-            List<GraphPath> paths = new ArrayList<>();
-            DebugOutput debugOutput = null;
-            int placeIndex = (request.arriveBy ? places.size() - 1 : 1);
-
-            while (0 < placeIndex && placeIndex < places.size()) {
-                RoutingRequest intermediateRequest = request.clone();
-                intermediateRequest.setNumItineraries(1);
-                intermediateRequest.dateTime = time;
-                intermediateRequest.from = places.get(placeIndex - 1);
-                intermediateRequest.to = places.get(placeIndex);
-                intermediateRequest.rctx = null;
-                intermediateRequest.setRoutingContext(router.graph, temporaryVertices);
-
-                if (debugOutput != null) {// Restore the previous debug info accumulator
-                    intermediateRequest.rctx.debugOutput = debugOutput;
-                } else {// Store the debug info accumulator
-                    debugOutput = intermediateRequest.rctx.debugOutput;
-                }
-
-                List<GraphPath> partialPaths = getPaths(intermediateRequest);
-                if (partialPaths.size() == 0) {
-                    return partialPaths;
-                }
-
-                GraphPath path = partialPaths.get(0);
-                paths.add(path);
-                time = (request.arriveBy ? path.getStartTime() : path.getEndTime());
-                placeIndex += (request.arriveBy ? -1 : +1);
-            }
-            request.setRoutingContext(router.graph);
-            request.rctx.debugOutput = debugOutput;
-            if (request.arriveBy) {
-                Collections.reverse(paths);
-            }
-            return Collections.singletonList(joinPaths(paths));
-        } else {
-            return getPaths(request);
-        }
-    }
-
-    private static GraphPath joinPaths(List<GraphPath> paths) {
+    protected static GraphPath joinPaths(List<GraphPath> paths) {
         State lastState = paths.get(0).states.getLast();
         GraphPath newPath = new GraphPath(lastState, false);
         Vertex lastVertex = lastState.getVertex();
@@ -493,6 +461,31 @@ public class GraphPathFinder {
             lastVertex = path.getEndVertex();
         }
         return newPath;
+    }
+
+    DebugOutput debugOutput = null;
+
+    public GraphPath getGraphPath(RoutingRequest request, Collection<Vertex> temporaryVertices, long time,
+                                   TraverseModeSet modeSet, GenericLocation start, GenericLocation end) {
+        RoutingRequest intermediateRequest = request.clone();
+        intermediateRequest.setNumItineraries(1);
+        intermediateRequest.dateTime = time;
+        intermediateRequest.from = start;
+        intermediateRequest.to = end;
+        intermediateRequest.rctx = null;
+        intermediateRequest.setRoutingContext(router.graph, temporaryVertices);
+        intermediateRequest.setModes(modeSet);
+        if (debugOutput != null) {
+            intermediateRequest.rctx.debugOutput = debugOutput;
+        } else {
+            debugOutput = intermediateRequest.rctx.debugOutput;
+        }
+        List<GraphPath> paths = getPaths(intermediateRequest);
+        if (paths.size() == 0) {
+            return null;
+        } else {
+            return paths.get(0);
+        }
     }
 
 /*
