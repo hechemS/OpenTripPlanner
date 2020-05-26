@@ -1,11 +1,7 @@
 package org.opentripplanner.routing.controller;
 
 import constraints.*;
-import constraints.conditions.*;
-import constraints.context.ConstraintContext;
-import constraints.context.TransportationMode;
 import org.opentripplanner.routing.core.RoutingRequest;
-
 import java.util.ArrayList;
 import java.util.List;
 

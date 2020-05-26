@@ -6,13 +6,21 @@ import org.opentripplanner.standalone.Router;
 
 public class PathFinderPolicy {
 
+    /** Decide how the bike will be used in the routing based on the distance to the origin
+     * and destination of the trip.
+     * If there is a bike location and the distance to the origin is less than 500 meters,
+     * walk to the bike and use it immediately after finding it.
+     * If the bike is withing 2000 meters from the destination, use it in the last part of the trip.
+     * If the bike is out of reach from both origin and destination, don't use the bike in the trip.
+     * If the bike location is not specified, assume the bike is at the origin.
+     */
     public static PathFinder selectPathFinder(RoutingRequest request, Router router) {
         if(request.hasBikeLocation()) {
-            double distanceToOrigin = distance(request.from, request.bikeLocation);
-            double distanceToDestination = distance(request.bikeLocation, request.to);
+            double distanceToOrigin = haversineDistance(request.from, request.bikeLocation);
+            double distanceToDestination = haversineDistance(request.bikeLocation, request.to);
             if (request.modes.getBicycle() && distanceToOrigin < 500) {
                 return new WalkToBikePathFinder(router);
-            } else if (request.modes.getBicycle() && distanceToDestination < 3000) {
+            } else if (request.modes.getBicycle() && distanceToDestination < 2000) {
                 return new BikeToDestinationPathFinder(router);
             } else {
                 request.modes.setBicycle(false);
@@ -22,7 +30,9 @@ public class PathFinderPolicy {
         return new GraphPathFinder(router);
     }
 
-    public static double distance(GenericLocation start, GenericLocation end) {
+    /** Determine the great-circle distance between two points on a sphere given their longitudes and latitudes.
+     */
+    public static double haversineDistance(GenericLocation start, GenericLocation end) {
         final int R = 6371;
         double latDistance = Math.toRadians(end.lat - start.lat);
         double lonDistance = Math.toRadians(end.lng - start.lng);

@@ -1,6 +1,8 @@
 package org.opentripplanner.routing.impl.PathFinder;
 
 import com.google.common.collect.Lists;
+import org.opentripplanner.api.resource.DebugOutput;
+import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.routing.algorithm.AStar;
 import org.opentripplanner.routing.algorithm.strategies.EuclideanRemainingWeightHeuristic;
@@ -10,8 +12,11 @@ import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHe
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.edgetype.LegSwitchingEdge;
 import org.opentripplanner.routing.edgetype.TransitBoardAlight;
+import org.opentripplanner.routing.error.PathNotFoundException;
+import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.flex.DeviatedRouteGraphModifier;
 import org.opentripplanner.routing.flex.FlagStopGraphModifier;
 import org.opentripplanner.routing.graph.Edge;
@@ -57,6 +62,63 @@ public abstract class PathFinder {
     public PathFinder(Router router) {
         this.router = router;
     }
+
+    /* Try to find N paths through the Graph */
+    public List<GraphPath> graphPathFinderEntryPoint (RoutingRequest request) {
+
+        // We used to perform a protective clone of the RoutingRequest here.
+        // There is no reason to do this if we don't modify the request.
+        // Any code that changes them should be performing the copy!
+
+        List<GraphPath> paths = null;
+        try {
+            paths = getGraphPathsConsideringIntermediates(request);
+            if (paths == null && request.wheelchairAccessible) {
+                // There are no paths that meet the user's slope restrictions.
+                // Try again without slope restrictions, and warn the user in the response.
+                RoutingRequest relaxedRequest = request.clone();
+                relaxedRequest.maxSlope = Double.MAX_VALUE;
+                request.rctx.slopeRestrictionRemoved = true;
+                paths = getGraphPathsConsideringIntermediates(relaxedRequest);
+            }
+            request.rctx.debugOutput.finishedCalculating();
+
+        } catch (VertexNotFoundException e) {
+            LOG.info("Vertex not found: " + request.from + " : " + request.to);
+            throw e;
+        }
+
+        // Detect and report that most obnoxious of bugs: path reversal asymmetry.
+        // Removing paths might result in an empty list, so do this check before the empty list check.
+        if (paths != null) {
+            Iterator<GraphPath> gpi = paths.iterator();
+            while (gpi.hasNext()) {
+                GraphPath graphPath = gpi.next();
+                // TODO check, is it possible that arriveBy and time are modifed in-place by the search?
+                if (request.arriveBy) {
+                    if (graphPath.states.getLast().getTimeSeconds() > request.dateTime) {
+                        LOG.error("A graph path arrives after the requested time. This implies a bug.");
+                        gpi.remove();
+                    }
+                } else {
+                    if (graphPath.states.getFirst().getTimeSeconds() < request.dateTime) {
+                        LOG.error("A graph path leaves before the requested time. This implies a bug.");
+                        gpi.remove();
+                    }
+                }
+            }
+        }
+
+        if (paths == null || paths.size() == 0) {
+            LOG.debug("Path not found: " + request.from + " : " + request.to);
+            request.rctx.debugOutput.finishedRendering(); // make sure we still report full search time
+            throw new PathNotFoundException();
+        }
+
+        return paths;
+    }
+
+    public abstract List<GraphPath> getGraphPathsConsideringIntermediates(RoutingRequest request);
 
     /**
      * Repeatedly build shortest path trees, retaining the best path to the destination after each try.
@@ -356,14 +418,14 @@ public abstract class PathFinder {
     }
 
     /* Try to find N paths through the Graph */
-    public abstract List<GraphPath> graphPathFinderEntryPoint (RoutingRequest request);
+    //public abstract List<GraphPath> graphPathFinderEntryPoint (RoutingRequest request);
 
-    protected static GraphPath joinParts(GraphPath beforePath, GraphPath afterPath) {
+    protected static GraphPath joinParts(GraphPath beforePath, GraphPath afterPath, TraverseMode traverseMode) {
         State lastState = beforePath.states.getLast();
         Vertex lastVertex = lastState.getVertex();
         LegSwitchingEdge legSwitchingEdge = new LegSwitchingEdge(lastVertex, lastVertex);
         afterPath.states.getFirst().backEdge = legSwitchingEdge;
-        afterPath.states.getFirst().setBackMode(TraverseMode.BICYCLE);
+        afterPath.states.getFirst().setBackMode(traverseMode);
         GraphPath newPath = new GraphPath(lastState, false);
         for (State s: afterPath.states) {
             newPath.states.add(s);
@@ -399,6 +461,31 @@ public abstract class PathFinder {
             lastVertex = path.getEndVertex();
         }
         return newPath;
+    }
+
+    DebugOutput debugOutput = null;
+
+    public GraphPath getGraphPath(RoutingRequest request, Collection<Vertex> temporaryVertices, long time,
+                                   TraverseModeSet modeSet, GenericLocation start, GenericLocation end) {
+        RoutingRequest intermediateRequest = request.clone();
+        intermediateRequest.setNumItineraries(1);
+        intermediateRequest.dateTime = time;
+        intermediateRequest.from = start;
+        intermediateRequest.to = end;
+        intermediateRequest.rctx = null;
+        intermediateRequest.setRoutingContext(router.graph, temporaryVertices);
+        intermediateRequest.setModes(modeSet);
+        if (debugOutput != null) {
+            intermediateRequest.rctx.debugOutput = debugOutput;
+        } else {
+            debugOutput = intermediateRequest.rctx.debugOutput;
+        }
+        List<GraphPath> paths = getPaths(intermediateRequest);
+        if (paths.size() == 0) {
+            return null;
+        } else {
+            return paths.get(0);
+        }
     }
 
 /*

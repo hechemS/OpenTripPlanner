@@ -9,7 +9,6 @@ import constraints.conditions.ValueCondition;
 import constraints.conditions.ValueType;
 import constraints.context.ConstraintContext;
 import constraints.context.TransportationMode;
-import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.routing.core.RoutingRequest;
 
 public abstract class RequestController {

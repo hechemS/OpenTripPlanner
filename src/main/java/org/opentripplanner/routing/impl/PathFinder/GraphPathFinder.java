@@ -45,61 +45,6 @@ public class GraphPathFinder extends PathFinder {
 
     public GraphPathFinder(Router router) { super(router); }
 
-    /* Try to find N paths through the Graph */
-    public List<GraphPath> graphPathFinderEntryPoint (RoutingRequest request) {
-
-        // We used to perform a protective clone of the RoutingRequest here.
-        // There is no reason to do this if we don't modify the request.
-        // Any code that changes them should be performing the copy!
-
-        List<GraphPath> paths = null;
-        try {
-            paths = getGraphPathsConsideringIntermediates(request);
-            if (paths == null && request.wheelchairAccessible) {
-                // There are no paths that meet the user's slope restrictions.
-                // Try again without slope restrictions, and warn the user in the response.
-                RoutingRequest relaxedRequest = request.clone();
-                relaxedRequest.maxSlope = Double.MAX_VALUE;
-                request.rctx.slopeRestrictionRemoved = true;
-                paths = getGraphPathsConsideringIntermediates(relaxedRequest);
-            }
-            request.rctx.debugOutput.finishedCalculating();
-
-        } catch (VertexNotFoundException e) {
-            LOG.info("Vertex not found: " + request.from + " : " + request.to);
-            throw e;
-        }
-
-        // Detect and report that most obnoxious of bugs: path reversal asymmetry.
-        // Removing paths might result in an empty list, so do this check before the empty list check.
-        if (paths != null) {
-            Iterator<GraphPath> gpi = paths.iterator();
-            while (gpi.hasNext()) {
-                GraphPath graphPath = gpi.next();
-                // TODO check, is it possible that arriveBy and time are modifed in-place by the search?
-                if (request.arriveBy) {
-                    if (graphPath.states.getLast().getTimeSeconds() > request.dateTime) {
-                        LOG.error("A graph path arrives after the requested time. This implies a bug.");
-                        gpi.remove();
-                    }
-                } else {
-                    if (graphPath.states.getFirst().getTimeSeconds() < request.dateTime) {
-                        LOG.error("A graph path leaves before the requested time. This implies a bug.");
-                        gpi.remove();
-                    }
-                }
-            }
-        }
-
-        if (paths == null || paths.size() == 0) {
-            LOG.debug("Path not found: " + request.from + " : " + request.to);
-            request.rctx.debugOutput.finishedRendering(); // make sure we still report full search time
-            throw new PathNotFoundException();
-        }
-
-        return paths;
-    }
-
     /**
      * Break up a RoutingRequest with intermediate places into separate requests, in the given order.
      *
@@ -109,7 +54,7 @@ public class GraphPathFinder extends PathFinder {
      * the requested subpaths is (i2, to), (i1, i2), and (from, i1) which has to be reversed at
      * the end.
      */
-    private List<GraphPath> getGraphPathsConsideringIntermediates(RoutingRequest request) {
+    public List<GraphPath> getGraphPathsConsideringIntermediates(RoutingRequest request) {
         Collection<Vertex> temporaryVertices = new ArrayList<>();
         if (request.hasIntermediatePlaces()) {
             List<GenericLocation> places = Lists.newArrayList(request.from);
