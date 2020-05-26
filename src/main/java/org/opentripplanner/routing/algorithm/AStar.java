@@ -264,10 +264,25 @@ public class AStar {
             }
             if (runState.terminationStrategy != null) {
                 if (runState.terminationStrategy.shouldSearchTerminate (
-                    runState.rctx.origin, runState.rctx.target, runState.u, runState.spt, runState.options)) {
-                    break;
+                        runState.rctx.origin, runState.rctx.target, runState.u, runState.spt, runState.options)) {
+                    if (runState.options.onlyTransitTrips && !runState.u.isEverBoarded()) {
+                        continue;
+                    }
+                    runState.targetAcceptedStates.add(runState.u);
+                    runState.foundPathWeight = runState.u.getWeight();
+                    runState.options.rctx.debugOutput.foundPath();
+                    // new GraphPath(runState.u, false).dump();
+                    /* Only find one path at a time in long distance mode. */
+                    if (runState.options.longDistance) {
+                        break;
+                    }
+                    /* Break out of the search if we've found the requested number of paths. */
+                    if (runState.targetAcceptedStates.size() >= runState.options.getNumItineraries()) {
+                        LOG.debug("total vertices visited {}", runState.nVisited);
+                        break;
+                    }
                 }
-            }  else if (!runState.options.batch && runState.u_vertex == runState.rctx.target && runState.u.isFinal()) {
+            } else if (!runState.options.batch && runState.u_vertex == runState.rctx.target && runState.u.isFinal()) {
                 if (runState.options.onlyTransitTrips && !runState.u.isEverBoarded()) {
                     continue;
                 }

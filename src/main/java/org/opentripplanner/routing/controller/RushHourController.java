@@ -26,6 +26,6 @@ public class RushHourController extends RequestController {
         constraints.add(firstTransferPenalty());
         constraints.add(secondTransferPenalty());
         NestedConstraint constraint = new NestedConstraint(constraints, true);
-        request.constraintController = new ConstraintController(new ConstraintWrapper(constraint));
+        request.constraintController.addConstraint(constraint);
     }
 }
