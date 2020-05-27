@@ -15,6 +15,9 @@ public class PathFinderPolicy {
      * If the bike location is not specified, assume the bike is at the origin.
      */
     public static PathFinder selectPathFinder(RoutingRequest request, Router router) {
+        if(!request.minDistanceToMode.isEmpty()) {
+            return new MinimumDistancePathFinder(router);
+        }
         if(request.hasBikeLocation()) {
             double distanceToOrigin = haversineDistance(request.from, request.bikeLocation);
             double distanceToDestination = haversineDistance(request.bikeLocation, request.to);

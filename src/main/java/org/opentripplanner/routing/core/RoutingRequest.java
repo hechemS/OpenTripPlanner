@@ -2,6 +2,7 @@ package org.opentripplanner.routing.core;
 
 import com.google.common.base.Objects;
 import constraints.ConstraintController;
+import constraints.context.TransportationMode;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
@@ -76,6 +77,8 @@ public class RoutingRequest implements Cloneable, Serializable {
     public ConstraintController constraintController;
 
     public RequestController requestController;
+
+    public Map<TransportationMode, Double> minDistanceToMode;
 
     /** An ordered list of intermediate locations to be visited. */
     public List<GenericLocation> intermediatePlaces;
@@ -1519,6 +1522,10 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public boolean hasBikeLocation() {
         return bikeLocation != null;
+    }
+
+    public void mapMinDistanceToMode() {
+        minDistanceToMode = constraintController.mapMinDistanceToMode();
     }
 
 }

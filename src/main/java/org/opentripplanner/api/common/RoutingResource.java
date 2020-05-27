@@ -445,6 +445,9 @@ public abstract class RoutingResource {
             request.constraintController = new ConstraintController(router.constraint);
         }
 
+        // Retrieve the minimum distance of each mode from the constraint controller.
+        request.mapMinDistanceToMode();
+
         {
             //FIXME: move into setter method on routing request
             TimeZone tz;

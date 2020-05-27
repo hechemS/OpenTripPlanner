@@ -1,5 +1,6 @@
 package org.opentripplanner.routing.core;
 
+import constraints.context.TransportationMode;
 import state.SimpleTraverseMode;
 
 import javax.xml.bind.annotation.XmlType;
@@ -80,5 +81,17 @@ public enum TraverseMode {
                 return SimpleTraverseMode.AIRPLANE;
         }
         return null;
+    }
+
+    public static TraverseMode transportationToTraverseMode(TransportationMode mode) {
+        if (mode == TransportationMode.BIKE) {
+            return TraverseMode.BICYCLE;
+        } else if (mode == TransportationMode.CAR) {
+            return TraverseMode.CAR;
+        } else if (mode == TransportationMode.WALK) {
+            return TraverseMode.WALK;
+        } else {
+            return TraverseMode.TRANSIT;
+        }
     }
 }

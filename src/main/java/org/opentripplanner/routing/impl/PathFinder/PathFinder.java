@@ -5,10 +5,7 @@ import org.opentripplanner.api.resource.DebugOutput;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.routing.algorithm.AStar;
-import org.opentripplanner.routing.algorithm.strategies.EuclideanRemainingWeightHeuristic;
-import org.opentripplanner.routing.algorithm.strategies.InterleavedBidirectionalHeuristic;
-import org.opentripplanner.routing.algorithm.strategies.RemainingWeightHeuristic;
-import org.opentripplanner.routing.algorithm.strategies.TrivialRemainingWeightHeuristic;
+import org.opentripplanner.routing.algorithm.strategies.*;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
@@ -52,6 +49,8 @@ import java.util.stream.Collectors;
  * and harmless to have the OTPServer object etc. in fields, to avoid passing context around in function parameters.
  */
 public abstract class PathFinder {
+
+    MinimumDistanceTerminationStrategy strategy = null;
 
     protected static final Logger LOG = LoggerFactory.getLogger(GraphPathFinder.class);
     protected static final double DEFAULT_MAX_WALK = 2000;
@@ -225,7 +224,7 @@ public abstract class PathFinder {
                 break;
             }
             // Don't dig through the SPT object, just ask the A star algorithm for the states that reached the target.
-            aStar.getShortestPathTree(options, timeout);
+            aStar.getShortestPathTree(options, timeout, strategy);
 
             if (options.rctx.aborted) {
                 break; // Search timed out or was gracefully aborted for some other reason.
@@ -329,7 +328,7 @@ public abstract class PathFinder {
             Vertex toVertex = options.arriveBy ? transitStop : options.rctx.toVertex;
             RoutingRequest reversedTransitRequest = createReversedTransitRequest(originalReq, options, fromVertex, toVertex,
                     arrDepTime, new EuclideanRemainingWeightHeuristic());
-            aStar.getShortestPathTree(reversedTransitRequest, timeout);
+            aStar.getShortestPathTree(reversedTransitRequest, timeout, strategy);
             List<GraphPath> pathsToTarget = aStar.getPathsToTarget();
             if(pathsToTarget.isEmpty()){
                 reversedPaths.add(newPath);
@@ -342,7 +341,7 @@ public abstract class PathFinder {
             Vertex toTransVertex = options.arriveBy ? options.rctx.toVertex: transitStop;
             RoutingRequest reversedMainRequest = createReversedMainRequest(originalReq, options, fromTransVertex,
                     toTransVertex, transitStopTime, remainingWeightHeuristic);
-            aStar.getShortestPathTree(reversedMainRequest, timeout);
+            aStar.getShortestPathTree(reversedMainRequest, timeout, strategy);
 
             List<GraphPath> newRevPaths = aStar.getPathsToTarget();
             if (newRevPaths.isEmpty()) {
