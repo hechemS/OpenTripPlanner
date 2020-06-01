@@ -1,8 +1,10 @@
 package org.opentripplanner.routing.controller;
 
 import org.opentripplanner.routing.core.RoutingRequest;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class ControllerPolicy {
 
@@ -18,19 +20,27 @@ public class ControllerPolicy {
         int hours = getHours(request.getDateTime());
         if (!request.minDistanceToMode.isEmpty() || hours < 7 || hours > 21) {
             request.selectController(new EmptyController());
-        } else if (hours >= 7 && hours <= 9 || hours >= 16 && hours <= 18) {
+        } else if (hours >= 7 && hours <= 8) {
             request.selectController(new RushHourController());
         } else {
             request.selectController(new DefaultController());
         }
     }
 
+    private static DateFormat createFormatter() {
+        DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+        formatter.setTimeZone(TimeZone.getTimeZone("GMT+2"));
+        return formatter;
+    }
+
     private static int getHours(Date date) {
-        String time = new SimpleDateFormat("HH:mm:ss").format(date);
+        DateFormat formatter = createFormatter();
+        String time = formatter.format(date);
         return Integer.parseInt(time.split(":")[0]);
     }
 
     public static int getMinutes(Date date) {
+        DateFormat formatter = createFormatter();
         String time = new SimpleDateFormat("HH:mm:ss").format(date);
         return Integer.parseInt(time.split(":")[1]);
     }

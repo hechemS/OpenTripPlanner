@@ -8,7 +8,7 @@ import java.util.List;
 public class DefaultController extends RequestController {
 
     @Override
-    public void configure(RoutingRequest request) {
+    public void configure(RoutingRequest request, String bannedRoutes, String bannedStopsHard) {
         // set constraints.
         List<Constraint> constraints = new ArrayList<>();
         constraints.add(singleBikeUsageConstraint());

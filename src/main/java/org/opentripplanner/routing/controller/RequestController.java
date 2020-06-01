@@ -12,7 +12,7 @@ import constraints.context.TransportationMode;
 import org.opentripplanner.routing.core.RoutingRequest;
 
 public abstract class RequestController {
-    public abstract void configure(RoutingRequest request);
+    public abstract void configure(RoutingRequest request, String bannedRoutes, String bannedStopsHard);
 
     public Constraint singleBikeUsageConstraint() {
         ConstraintContext context = new ConstraintContext();

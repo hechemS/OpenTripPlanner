@@ -72,7 +72,7 @@ public class PlannerResource extends RoutingResource {
 
             /* Configure request fields and constraints based on a time policy */
             ControllerPolicy.selectController(request);
-            request.configureRequest();
+            request.configureRequest(bannedRoutes, bannedStopsHard);
 
             /* Find some good GraphPaths through the OTP Graph. */
             PathFinder gpFinder = PathFinderPolicy.selectPathFinder(request, router);
