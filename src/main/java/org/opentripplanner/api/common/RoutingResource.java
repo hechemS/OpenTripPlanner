@@ -65,6 +65,9 @@ public abstract class RoutingResource {
     @QueryParam("constraint")
     protected String constraint;
 
+    @QueryParam("rushHourAvoidance")
+    protected Boolean rushHourAvoidance;
+
     /** An ordered list of intermediate locations to be visited (see the fromPlace for format). Parameter can be specified multiple times. */
     @QueryParam("intermediatePlaces")
     protected List<String> intermediatePlaces;
@@ -447,6 +450,11 @@ public abstract class RoutingResource {
 
         // Retrieve the minimum distance of each mode from the constraint controller.
         request.mapMinDistanceToMode();
+
+        // Enable or disable the RushHourController.
+        if (rushHourAvoidance != null) {
+            request.setRushHouAvoidance(rushHourAvoidance);
+        }
 
         {
             //FIXME: move into setter method on routing request

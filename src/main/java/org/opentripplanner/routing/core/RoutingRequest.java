@@ -78,6 +78,8 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public RequestController requestController;
 
+    public boolean rushHourAvoidance = true;
+
     public Map<TransportationMode, Double> minDistanceToMode;
 
     /** An ordered list of intermediate locations to be visited. */
@@ -1527,5 +1529,9 @@ public class RoutingRequest implements Cloneable, Serializable {
     public void mapMinDistanceToMode() {
         minDistanceToMode = constraintController.mapMinDistanceToMode();
     }
+
+    public boolean getRushHouAvoidance() { return rushHourAvoidance; }
+
+    public void setRushHouAvoidance(boolean rushHourAvoidance) { this.rushHourAvoidance = rushHourAvoidance; }
 
 }
