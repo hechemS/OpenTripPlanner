@@ -1,5 +1,6 @@
 package org.opentripplanner.routing.impl.PathFinder;
 
+import org.opentripplanner.common.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.standalone.Router;
@@ -19,11 +20,10 @@ public class PathFinderPolicy {
             return new MinimumDistancePathFinder(router);
         }
         if(request.hasBikeLocation()) {
-            double distanceToOrigin = haversineDistance(request.from, request.bikeLocation);
-            double distanceToDestination = haversineDistance(request.bikeLocation, request.to);
+            double distanceToOrigin = SphericalDistanceLibrary.distance(request.from.getCoordinate(), request.to.getCoordinate());
             if (request.modes.getBicycle() && distanceToOrigin < 500) {
                 return new WalkToBikePathFinder(router);
-            } else if (request.modes.getBicycle() && distanceToDestination < 2000) {
+            } else if (request.modes.getBicycle() && bikeReachableFromDestination(request.from, request.to, request.bikeLocation)) {
                 return new BikeToDestinationPathFinder(router);
             } else {
                 request.modes.setBicycle(false);
@@ -33,16 +33,26 @@ public class PathFinderPolicy {
         return new GraphPathFinder(router);
     }
 
-    /** Determine the great-circle distance between two points on a sphere given their longitudes and latitudes.
+    /** Determine the latitude and longitude of the middle location between @param start and @param end.
+     * Inspired by https://stackoverflow.com/a/4656937.
      */
-    public static double haversineDistance(GenericLocation start, GenericLocation end) {
-        final int R = 6371;
-        double latDistance = Math.toRadians(end.lat - start.lat);
-        double lonDistance = Math.toRadians(end.lng - start.lng);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(start.lat)) * Math.cos(Math.toRadians(end.lat))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c * 1000;
+    public static GenericLocation midLocation(GenericLocation start, GenericLocation end){
+        double differenceLon = Math.toRadians(end.lng - start.lng);
+        double startLat = Math.toRadians(start.lat);
+        double endLat = Math.toRadians(end.lat);
+        double startLon = Math.toRadians(start.lng);
+        double x = Math.cos(endLat) * Math.cos(differenceLon);
+        double y = Math.cos(endLat) * Math.sin(differenceLon);
+        double midLat = Math.atan2(Math.sin(startLat) + Math.sin(endLat), Math.sqrt((Math.cos(startLat) + x) * (Math.cos(startLat) + x) + y * y));
+        double midLon = startLon + Math.atan2(y, Math.cos(startLat) + x);
+        return new GenericLocation(Math.toDegrees(midLat), Math.toDegrees(midLon));
+    }
+
+    public static boolean bikeReachableFromDestination(GenericLocation start, GenericLocation end, GenericLocation bikeLocation) {
+        GenericLocation middle = midLocation(start, end);
+        double r = SphericalDistanceLibrary.distance(middle.getCoordinate(), end.getCoordinate()) + 500;
+        double bikeToMid = SphericalDistanceLibrary.distance(bikeLocation.getCoordinate(), middle.getCoordinate());
+        double bikeToDestination = SphericalDistanceLibrary.distance(bikeLocation.getCoordinate(), end.getCoordinate());
+        return bikeToMid < r && bikeToDestination < 3000;
     }
 }
