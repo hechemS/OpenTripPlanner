@@ -9,15 +9,15 @@ public class DefaultController extends RequestController {
 
     @Override
     public void configure(RoutingRequest request, String bannedRoutes, String bannedStopsHard) {
+        request.setWalkReluctance(3);
         // set constraints.
         List<Constraint> constraints = new ArrayList<>();
         constraints.add(singleBikeUsageConstraint());
-        constraints.add(maximumCyclingDistanceConstraint());
-        //constraints.add(minimumCyclingDistanceConstraint());
-        constraints.add(maximumWalkingDistanceConstraint());
-        constraints.add(maximumTransfersConstraint());
-        constraints.add(firstTransferPenalty());
-        constraints.add(secondTransferPenalty());
+        constraints.add(maximumWalkingDistanceConstraint(3000));
+        constraints.add(maximumCyclingDistanceConstraint(5000));
+        constraints.add(transferPenalty(2, 300));
+        constraints.add(transferPenalty(3, 600));
+        constraints.add(maximumTransfersConstraint(3));
         NestedConstraint constraint = new NestedConstraint(constraints, true);
         request.constraintController.addConstraint(constraint);
     }

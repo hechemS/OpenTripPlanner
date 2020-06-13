@@ -56,7 +56,7 @@ public class WalkToBikePathFinder extends PathFinder {
             request.setRoutingContext(router.graph);
             request.rctx.debugOutput = debugOutput;
             debugOutput = null;
-            TraverseMode switchMode = pathToBike.states.getLast().getBackMode();
+            TraverseMode switchMode = TraverseMode.BICYCLE;
             return Collections.singletonList(joinParts(pathToBike, pathFromBike, switchMode));
         } else {
             return getPaths(request);

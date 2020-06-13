@@ -327,7 +327,22 @@ public class AStar {
         ss.logDistances(map);
         System.out.println(gson.toJson(map));
 
+        Map<TraverseMode, Double> mapTime = new HashMap<>();
+        System.out.println("------------------------------------------------------------------------------------------------");
+        System.out.println("########Times########");
+        logTimes(mapTime, runState.u);
+        System.out.println(gson.toJson(mapTime));
+
         return spt;
+    }
+
+    private void logTimes(Map<TraverseMode, Double> mapTime, State u) {
+        if (u.getBackMode() != null) {
+            double val = mapTime.getOrDefault(u.getBackMode(), 0.0);
+            val += u.getTimeSeconds() -  u.getBackState().getTimeSeconds();
+            mapTime.put(u.getBackMode(), val);
+            logTimes(mapTime, u.getBackState());
+        }
     }
     
     /** Get an SPT, starting from a collection of states */

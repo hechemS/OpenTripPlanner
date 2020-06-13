@@ -74,9 +74,15 @@ public class PlannerResource extends RoutingResource {
             ControllerPolicy.selectController(request);
             request.configureRequest(bannedRoutes, bannedStopsHard);
 
+            long startTime = System.nanoTime();
             /* Find some good GraphPaths through the OTP Graph. */
             PathFinder gpFinder = PathFinderPolicy.selectPathFinder(request, router);
             paths = gpFinder.graphPathFinderEntryPoint(request);
+            long endTime   = System.nanoTime();
+            long totalTime = endTime - startTime;
+            System.out.println("------------------------------------------------------------------------------------------------");
+            System.out.println("########TotalRuntime########");
+            System.out.println(totalTime / 1000000);
 
             /* Convert the internal GraphPaths to a TripPlan object that is included in an OTP web service Response. */
             TripPlan plan = GraphPathToTripPlanConverter.generatePlan(paths, request);

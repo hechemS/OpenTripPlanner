@@ -21,45 +21,39 @@ public abstract class RequestController {
         return new HardConstraint(context, condition);
     }
 
-    public Constraint maximumCyclingDistanceConstraint() {
-        ConstraintContext context = new ConstraintContext();
-        context.setTransportationMode(TransportationMode.BIKE);
-        ConstraintCondition condition = new ValueCondition(ValueType.DISTANCE, 3000, OperatorType.MaximumValue);
-        return new HardConstraint(context, condition);
-    }
-
-    public Constraint minimumCyclingDistanceConstraint() {
-        ConstraintContext context = new ConstraintContext();
-        context.setTransportationMode(TransportationMode.BIKE);
-        ConstraintCondition condition = new ValueCondition(ValueType.DISTANCE, 1500, OperatorType.MinimumValue);
-        return new HardConstraint(context, condition);
-    }
-
-    public Constraint maximumWalkingDistanceConstraint() {
+    public Constraint maximumWalkingDistanceConstraint(int distance) {
         ConstraintContext context = new ConstraintContext();
         context.setTransportationMode(TransportationMode.WALK);
-        ConstraintCondition condition = new ValueCondition(ValueType.DISTANCE, 1500, OperatorType.MaximumValue);
+        ConstraintCondition condition = new ValueCondition(ValueType.DISTANCE, distance, OperatorType.MaximumValue);
         return new HardConstraint(context, condition);
     }
 
-    public Constraint maximumTransfersConstraint() {
+    public Constraint maximumCyclingDistanceConstraint(int distance) {
         ConstraintContext context = new ConstraintContext();
-        context.setTransportationMode(TransportationMode.PUBLIC_TRANSPORT);
-        ConstraintCondition condition = new ValueCondition(ValueType.LINE_CHANGES, 2, OperatorType.MaximumValue);
+        context.setTransportationMode(TransportationMode.BIKE);
+        ConstraintCondition condition = new ValueCondition(ValueType.DISTANCE, distance, OperatorType.MaximumValue);
         return new HardConstraint(context, condition);
     }
 
-    public Constraint firstTransferPenalty() {
+    public Constraint transferPenalty(int transfer, int penalty) {
         ConstraintContext context = new ConstraintContext();
         context.setTransportationMode(TransportationMode.PUBLIC_TRANSPORT);
-        ConstraintCondition condition = new ValueCondition(ValueType.LINE_CHANGES, 1, OperatorType.ExactValue);
-        return new SoftConstraint(context, condition, 300);
+        ConstraintCondition condition = new ValueCondition(ValueType.LINE_CHANGES, transfer, OperatorType.ExactValue);
+        return new SoftConstraint(context, condition, penalty);
     }
 
-    public Constraint secondTransferPenalty() {
+    public Constraint thirdTransferPenalty(int transfer, int penalty) {
         ConstraintContext context = new ConstraintContext();
         context.setTransportationMode(TransportationMode.PUBLIC_TRANSPORT);
-        ConstraintCondition condition = new ValueCondition(ValueType.LINE_CHANGES, 2, OperatorType.ExactValue);
-        return new SoftConstraint(context, condition, 600);
+        ConstraintCondition condition = new ValueCondition(ValueType.LINE_CHANGES, transfer, OperatorType.ExactValue);
+        return new SoftConstraint(context, condition, penalty);
     }
+
+    public Constraint maximumTransfersConstraint(int max) {
+        ConstraintContext context = new ConstraintContext();
+        context.setTransportationMode(TransportationMode.PUBLIC_TRANSPORT);
+        ConstraintCondition condition = new ValueCondition(ValueType.LINE_CHANGES, max, OperatorType.MaximumValue);
+        return new HardConstraint(context, condition);
+    }
+
 }

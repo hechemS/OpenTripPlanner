@@ -71,7 +71,9 @@ public abstract class PathFinder {
 
         List<GraphPath> paths = null;
         try {
+            RoutingRequest cloneRequest = request.clone();
             paths = getGraphPathsConsideringIntermediates(request);
+            paths = filterShortBikeSegments(paths, cloneRequest);
             if (paths == null && request.wheelchairAccessible) {
                 // There are no paths that meet the user's slope restrictions.
                 // Try again without slope restrictions, and warn the user in the response.
@@ -115,6 +117,38 @@ public abstract class PathFinder {
         }
 
         return paths;
+    }
+
+    public List<GraphPath> filterShortBikeSegments(List<GraphPath> paths, RoutingRequest request) {
+        List<GraphPath> filteredPaths = new ArrayList<>();
+        for(GraphPath path : paths) {
+            Double distance = getCyclingDistance(path.states.getLast());
+            if (distance > 200 || distance == 0) {
+                filteredPaths.add(path);
+            }
+        }
+        int size = filteredPaths.size();
+        GraphPathFinder regularPathFinder = new GraphPathFinder(router);
+        if (size < request.getNumItineraries()) {
+            request.setNumItineraries(request.getNumItineraries()-size);
+            TraverseModeSet modeSet = request.modes.clone();
+            modeSet.setBicycle(false);
+            request.setModes(modeSet);
+            List<GraphPath> noBikePaths = regularPathFinder.getGraphPathsConsideringIntermediates(request);
+            filteredPaths.addAll(noBikePaths);
+        }
+        return filteredPaths;
+    }
+
+    public double getCyclingDistance(State s) {
+        if (s.getBackState() == null) {
+            return 0;
+        }
+        if (s.getBackMode() == TraverseMode.BICYCLE) {
+            return s.getBackEdge().getDistance() + getCyclingDistance(s.getBackState());
+        } else {
+            return getCyclingDistance(s.getBackState());
+        }
     }
 
     public abstract List<GraphPath> getGraphPathsConsideringIntermediates(RoutingRequest request);
