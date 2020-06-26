@@ -44,7 +44,14 @@ public class PreAlightEdge extends FreeEdge implements StationEdge {
                 return null;
             }
         }
-        
+
+        int unpreferredStopsPenalty = 0;
+        if (!options.unpreferredStops.isEmpty()) {
+            if (options.unpreferredStops.matches(((TransitStop) tov).getStop())) {
+                unpreferredStopsPenalty = options.useUnpreferredStopsPenalty;
+            }
+        }
+
         if (options.arriveBy) {
             /* Backward traversal: apply stop(pair)-specific costs */
             // Do not pre-board if transit modes are not selected.
@@ -85,6 +92,7 @@ public class PreAlightEdge extends FreeEdge implements StationEdge {
             long wait_cost = t0 - alight_before;
             s1.incrementWeight(wait_cost + transfer_penalty);
             s1.setBackMode(getMode());
+            s1.incrementWeight(unpreferredStopsPenalty);
             return s1.makeState();
         } else {
             /* Forward traversal: not so much to do */
@@ -93,6 +101,7 @@ public class PreAlightEdge extends FreeEdge implements StationEdge {
             s1.alightTransit();
             s1.incrementTimeInSeconds(options.alightSlack);
             s1.setBackMode(getMode());
+            s1.incrementWeight(unpreferredStopsPenalty);
             return s1.makeState();
         }
     }

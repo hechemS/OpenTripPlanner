@@ -15,6 +15,7 @@ import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
 import org.opentripplanner.routing.core.OptimizeType;
 import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.core.StopMatcher;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.request.BannedStopSet;
 import org.opentripplanner.standalone.OTPServer;
@@ -271,6 +272,14 @@ public abstract class RoutingResource {
      */
     @QueryParam("bannedStopsHard")
     protected String bannedStopsHard;
+
+    /** A comma-separated list of unpreferred stops. */
+    @QueryParam("unpreferredStops")
+    protected String unpreferredStops;
+
+    /** An additional penalty added for passing by unpreferred stops. */
+    @QueryParam("useUnpreferredStopsPenalty")
+    protected Integer useUnpreferredStopsPenalty;
     
     /**
      * An additional penalty added to boardings after the first.  The value is in OTP's
@@ -589,6 +598,12 @@ public abstract class RoutingResource {
 
         if (bannedStopsHard != null)
             request.setBannedStopsHard(bannedStopsHard);
+
+        if (unpreferredStops != null)
+            request.setUnpreferredStops(unpreferredStops);
+
+        if (useUnpreferredStopsPenalty != null)
+            request.setUseUnpreferredStopsPenalty(useUnpreferredStopsPenalty);
         
         // The "Least transfers" optimization is accomplished via an increased transfer penalty.
         // See comment on RoutingRequest.transferPentalty.

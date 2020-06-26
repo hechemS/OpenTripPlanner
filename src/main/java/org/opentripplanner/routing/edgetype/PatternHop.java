@@ -79,11 +79,19 @@ public class PatternHop extends TablePatternEdge implements OnboardEdge, HopEdge
             }
         }
 
+        int unpreferredStopsPenalty = 0;
+        if (!options.unpreferredStops.isEmpty()) {
+            if (options.unpreferredStops.matches(((PatternStopVertex) fromv).getStop())) {
+                unpreferredStopsPenalty = options.useUnpreferredStopsPenalty;
+            }
+        }
+
         int runningTime = (int) timeLowerBound(options);
     	StateEditor s1 = state0.edit(this);
     	s1.incrementTimeInSeconds(runningTime);
     	s1.setBackMode(getMode());
     	s1.incrementWeight(runningTime);
+    	s1.incrementWeight(unpreferredStopsPenalty);
     	return s1.makeState();
     }
 
@@ -114,6 +122,13 @@ public class PatternHop extends TablePatternEdge implements OnboardEdge, HopEdge
             }
         }
 
+        int unpreferredStopsPenalty = 0;
+        if (!options.unpreferredStops.isEmpty()) {
+            if (options.unpreferredStops.matches(((PatternStopVertex) fromv).getStop())) {
+                unpreferredStopsPenalty = options.useUnpreferredStopsPenalty;
+            }
+        }
+
         int runningTime = getRunningTime(s0);
 
         s1.incrementTimeInSeconds(runningTime);
@@ -124,6 +139,7 @@ public class PatternHop extends TablePatternEdge implements OnboardEdge, HopEdge
         //s1.setRoute(pattern.getExemplar().route.getId());
         s1.incrementWeight(getWeight(s0, runningTime));
         s1.setBackMode(getMode());
+        s1.incrementWeight(unpreferredStopsPenalty);
         return s1.makeState();
     }
 

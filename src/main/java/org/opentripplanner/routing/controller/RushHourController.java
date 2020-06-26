@@ -16,8 +16,11 @@ public class RushHourController extends RequestController {
     String U6 = "1__1-U6-G-009-19,1__1-U6-G-010-3,1__1-U6-G-010-2,1__1-U6-G-010-1";
 
     @Override
-    public void configure(RoutingRequest request, String bannedRoutes, String bannedStopsHard) {
+    public void configure(RoutingRequest request, String bannedRoutes, String bannedStopsHard, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
         request.setWalkReluctance(3);
+        // set preferred routes
+        setPreferredRoutes(request, bannedRoutes);
+        request.setOtherThanPreferredRoutesPenalty(900);
         // avoid Sendlinger Tor and Hauptbahnhof.
         if (bannedStopsHard == null) {
             request.setBannedStopsHard(Sendlinger_Tor + "," + Hauptbahnhof);

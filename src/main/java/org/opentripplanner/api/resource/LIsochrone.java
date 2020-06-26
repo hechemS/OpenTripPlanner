@@ -34,6 +34,7 @@ import org.opentripplanner.analyst.core.IsochroneData;
 import org.opentripplanner.analyst.request.IsoChroneRequest;
 import org.opentripplanner.api.common.RoutingResource;
 import org.opentripplanner.common.model.GenericLocation;
+import org.opentripplanner.routing.controller.ControllerPolicy;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.standalone.Router;
 import org.slf4j.Logger;
@@ -172,6 +173,10 @@ public class LIsochrone extends RoutingResource {
             isoChroneRequest.coordinateOrigin = new GenericLocation(null, coordinateOrigin)
                     .getCoordinate();
         RoutingRequest sptRequest = buildRequest();
+
+        /* Configure request fields and constraints based on a time policy */
+        ControllerPolicy.selectController(sptRequest);
+        sptRequest.configureRequest(bannedRoutes, bannedStopsHard, preferredRoutes, otherThanPreferredRoutesPenalty);
 
         if (maxTimeSec != null) {
             isoChroneRequest.maxTimeSec = maxTimeSec;

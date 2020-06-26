@@ -276,6 +276,14 @@ public class RoutingRequest implements Cloneable, Serializable {
     
     /** Do not use certain stops. See for more information the bannedStopsHard property in the RoutingResource class. */
     public StopMatcher bannedStopsHard = StopMatcher.emptyMatcher();
+
+    /** Set of unpreferred stops for given user. */
+    public StopMatcher unpreferredStops = StopMatcher.emptyMatcher();
+
+    /**
+     * Penalty added for using every unpreferred Stop. We return number of seconds that we are willing to wait for preferred Stops.
+     */
+    public int useUnpreferredStopsPenalty = 300;
     
     /** Set of preferred routes by user. */
     public RouteMatcher preferredRoutes = RouteMatcher.emptyMatcher();
@@ -867,6 +875,20 @@ public class RoutingRequest implements Cloneable, Serializable {
         else {
             bannedStopsHard = StopMatcher.emptyMatcher();
         }
+    }
+
+    public void setUnpreferredStops(String s) {
+        if (!s.isEmpty()) {
+            unpreferredStops = StopMatcher.parse(s);
+        }
+        else {
+            unpreferredStops = StopMatcher.emptyMatcher();
+        }
+    }
+
+    public void setUseUnpreferredStopsPenalty(int penalty) {
+        if(penalty < 0) penalty = 0;
+        this.useUnpreferredStopsPenalty = penalty;
     }
 
     public void setBannedAgencies(String s) {
@@ -1514,8 +1536,8 @@ public class RoutingRequest implements Cloneable, Serializable {
         this.requestController = requestController;
     }
 
-    public void configureRequest(String bannedRoutes, String bannedStopsHard) {
-        requestController.configure(this, bannedRoutes, bannedStopsHard);
+    public void configureRequest(String bannedRoutes, String bannedStopsHard, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
+        requestController.configure(this, bannedRoutes, bannedStopsHard, preferredRoutes, otherThanPreferredRoutesPenalty);
     }
 
     public void setBikeLocation(String bikeLocation) {
