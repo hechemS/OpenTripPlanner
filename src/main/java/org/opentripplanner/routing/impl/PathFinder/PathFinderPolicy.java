@@ -16,11 +16,8 @@ public class PathFinderPolicy {
      * If the bike location is not specified, assume the bike is at the origin.
      */
     public static PathFinder selectPathFinder(RoutingRequest request, Router router) {
-        if(!request.minDistanceToMode.isEmpty()) {
-            return new MinimumDistancePathFinder(router);
-        }
         if(request.hasBikeLocation()) {
-            double distanceToOrigin = SphericalDistanceLibrary.distance(request.from.getCoordinate(), request.to.getCoordinate());
+            double distanceToOrigin = SphericalDistanceLibrary.distance(request.from.getCoordinate(), request.bikeLocation.getCoordinate());
             if (request.modes.getBicycle() && distanceToOrigin < 500) {
                 return new WalkToBikePathFinder(router);
             } else if (request.modes.getBicycle() && bikeReachableFromDestination(request.from, request.to, request.bikeLocation)) {
@@ -30,7 +27,11 @@ public class PathFinderPolicy {
                 return new GraphPathFinder(router);
             }
         }
-        return new GraphPathFinder(router);
+        if(!request.minDistanceToMode.isEmpty()) {
+            return new MinimumDistancePathFinder(router);
+        } else {
+            return new GraphPathFinder(router);
+        }
     }
 
     /** Determine the latitude and longitude of the middle location between @param start and @param end.

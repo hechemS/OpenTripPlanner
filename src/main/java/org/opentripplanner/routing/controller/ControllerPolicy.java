@@ -17,7 +17,7 @@ public class ControllerPolicy {
 
     public static void selectController(RoutingRequest request) {
         int hours = getHours(request.getDateTime());
-        if (!request.minDistanceToMode.isEmpty() || hours < 7 || hours > 21) {
+        if (hours < 7 || hours > 21) {
             request.selectController(new EmptyController());
         } else if (request.getRushHouAvoidance() && (hours >= 7 && hours <= 8)) {
             request.selectController(new RushHourController());

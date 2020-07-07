@@ -78,4 +78,10 @@ public abstract class RequestController {
         }
     }
 
+    public void minimumCyclingDistance(double distance, RoutingRequest request) {
+        if (!request.minDistanceToMode.containsKey(TransportationMode.BIKE) && request.modes.getBicycle()) {
+            request.minDistanceToMode.put(TransportationMode.BIKE, distance);
+        }
+    }
+
 }

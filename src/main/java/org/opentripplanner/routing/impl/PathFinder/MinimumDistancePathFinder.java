@@ -39,14 +39,16 @@ public class MinimumDistancePathFinder extends PathFinder {
             return new ArrayList<>();
         }
         GenericLocation midLocation = new GenericLocation(minDistancePath.getEndVertex().getCoordinate());
-        GraphPath pathToDestination = getPathToDestination(request, temporaryVertices, minDistancePath.getEndTime(), midLocation);
+        List<GraphPath> pathToDestination = getPathToDestination(request, temporaryVertices, minDistancePath.getEndTime(), midLocation);
         if (pathToDestination == null) {
             return new ArrayList<>();
         }
         request.setRoutingContext(router.graph);
         request.rctx.debugOutput = debugOutput;
         debugOutput = null;
-        return Collections.singletonList(joinParts(minDistancePath, pathToDestination, minDistancePath.states.getLast().getBackMode()));
+
+        return joinParts(Collections.singletonList(minDistancePath), pathToDestination,
+                minDistancePath.states.getLast().getBackMode(), true);
     }
 
     private GraphPath getMinimumDistancePath (RoutingRequest request, Collection<Vertex> temporaryVertices, long time) {
@@ -74,7 +76,8 @@ public class MinimumDistancePathFinder extends PathFinder {
                 return null;
             }
             if (lastPath != null) {
-                currentPath = joinParts(lastPath, paths.get(0), lastPath.states.getLast().getBackMode());
+                currentPath = joinParts(Collections.singletonList(lastPath), Collections.singletonList(paths.get(0)),
+                        lastPath.states.getLast().getBackMode(), true).get(0);
             } else {
                 currentPath = paths.get(0);
             }
@@ -85,16 +88,18 @@ public class MinimumDistancePathFinder extends PathFinder {
         return currentPath;
     }
 
-    private GraphPath getPathToDestination (RoutingRequest request, Collection<Vertex> temporaryVertices, long time, GenericLocation startLocation) {
+    private List<GraphPath> getPathToDestination (RoutingRequest request, Collection<Vertex> temporaryVertices, long time, GenericLocation startLocation) {
         RoutingRequest intermediateRequest = request.clone();
-        intermediateRequest.setNumItineraries(1);
+        intermediateRequest.setNumItineraries(3);
         intermediateRequest.dateTime = time;
         intermediateRequest.from = startLocation;
         intermediateRequest.to = request.to;
         intermediateRequest.rctx = null;
         intermediateRequest.setRoutingContext(router.graph, temporaryVertices);
         intermediateRequest.setModes(request.modes);
-        intermediateRequest.modes.setBicycle(false);
+        if (intermediateRequest.modes.getModes().size() > 1) {
+            intermediateRequest.modes.setBicycle(false);
+        }
         if (debugOutput != null) {
             intermediateRequest.rctx.debugOutput = debugOutput;
         } else {
@@ -105,7 +110,7 @@ public class MinimumDistancePathFinder extends PathFinder {
         if (paths.size() == 0) {
             return null;
         } else {
-            return paths.get(0);
+            return paths;
         }
     }
 

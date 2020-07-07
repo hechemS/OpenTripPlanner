@@ -453,21 +453,31 @@ public abstract class PathFinder {
     /* Try to find N paths through the Graph */
     //public abstract List<GraphPath> graphPathFinderEntryPoint (RoutingRequest request);
 
-    protected static GraphPath joinParts(GraphPath beforePath, GraphPath afterPath, TraverseMode traverseMode) {
-        State lastState = beforePath.states.getLast();
-        Vertex lastVertex = lastState.getVertex();
-        LegSwitchingEdge legSwitchingEdge = new LegSwitchingEdge(lastVertex, lastVertex);
-        afterPath.states.getFirst().backEdge = legSwitchingEdge;
-        afterPath.states.getFirst().setBackMode(traverseMode);
-        GraphPath newPath = new GraphPath(lastState, false);
-        for (State s: afterPath.states) {
-            newPath.states.add(s);
+    protected static List<GraphPath> joinParts(List<GraphPath> beforePath, List<GraphPath> afterPath,
+                                               TraverseMode traverseMode, boolean all) {
+        List<GraphPath> paths = new ArrayList<>();
+        for (GraphPath before: beforePath) {
+            for (GraphPath after : afterPath) {
+                if (!all && before.getEndTime() != after.getStartTime()) {
+                    continue;
+                }
+                State lastState = before.states.getLast();
+                Vertex lastVertex = lastState.getVertex();
+                LegSwitchingEdge legSwitchingEdge = new LegSwitchingEdge(lastVertex, lastVertex);
+                after.states.getFirst().backEdge = legSwitchingEdge;
+                after.states.getFirst().setBackMode(traverseMode);
+                GraphPath newPath = new GraphPath(lastState, false);
+                for (State s : after.states) {
+                    newPath.states.add(s);
+                }
+                newPath.edges.add(legSwitchingEdge);
+                for (Edge e : after.edges) {
+                    newPath.edges.add(e);
+                }
+                paths.add(newPath);
+            }
         }
-        newPath.edges.add(legSwitchingEdge);
-        for (Edge e: afterPath.edges) {
-            newPath.edges.add(e);
-        }
-        return newPath;
+        return paths;
     }
 
     protected static GraphPath joinPaths(List<GraphPath> paths) {
@@ -498,10 +508,10 @@ public abstract class PathFinder {
 
     DebugOutput debugOutput = null;
 
-    public GraphPath getGraphPath(RoutingRequest request, Collection<Vertex> temporaryVertices, long time,
-                                   TraverseModeSet modeSet, GenericLocation start, GenericLocation end) {
+    public List<GraphPath> getGraphPath(RoutingRequest request, Collection<Vertex> temporaryVertices, long time,
+                                   TraverseModeSet modeSet, GenericLocation start, GenericLocation end, int num) {
         RoutingRequest intermediateRequest = request.clone();
-        intermediateRequest.setNumItineraries(1);
+        intermediateRequest.setNumItineraries(num);
         intermediateRequest.dateTime = time;
         intermediateRequest.from = start;
         intermediateRequest.to = end;
@@ -517,7 +527,7 @@ public abstract class PathFinder {
         if (paths.size() == 0) {
             return null;
         } else {
-            return paths.get(0);
+            return paths;
         }
     }
 
