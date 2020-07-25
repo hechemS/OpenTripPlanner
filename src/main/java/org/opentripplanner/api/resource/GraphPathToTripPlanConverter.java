@@ -164,15 +164,13 @@ public abstract class GraphPathToTripPlanConverter {
 
         fixupLegs(itinerary.legs, legsStates);
 
-        itinerary.duration = lastState.getElapsedTimeSeconds();
+        itinerary.duration = Math.abs(lastState.getTimeSeconds() - states[0].getTimeSeconds());
         itinerary.startTime = makeCalendar(states[0]);
         itinerary.endTime = makeCalendar(lastState);
 
         calculateTimes(itinerary, states);
-
+        calculateDistances(itinerary, states);
         calculateElevations(itinerary, edges);
-
-        itinerary.walkDistance = lastState.getWalkDistance();
 
         itinerary.transfers = lastState.getNumBoardings();
         if (itinerary.transfers > 0 && !(states[0].getVertex() instanceof OnboardDepartVertex)) {
@@ -466,13 +464,7 @@ public abstract class GraphPathToTripPlanConverter {
         }
     }
 
-    /**
-     * Calculate the walkTime, transitTime and waitingTime of an {@link Itinerary}.
-     *
-     * @param itinerary The itinerary to calculate the times for
-     * @param states The states that go with the itinerary
-     */
-    private static void calculateTimes(Itinerary itinerary, State[] states) {
+    private static void calculateDistances(Itinerary itinerary, State[] states) {
         for (State state : states) {
             if (state.getBackMode() == null) continue;
 
@@ -489,6 +481,28 @@ public abstract class GraphPathToTripPlanConverter {
                 case BICYCLE:
                 case CAR:
                     itinerary.walkTime += state.getTimeDeltaSeconds();
+            }
+        }
+    }
+
+    /**
+     * Calculate the walkTime, transitTime and waitingTime of an {@link Itinerary}.
+     *
+     * @param itinerary The itinerary to calculate the times for
+     * @param states The states that go with the itinerary
+     */
+    private static void calculateTimes(Itinerary itinerary, State[] states) {
+        for (State state : states) {
+            if (state.getBackMode() == null) continue;
+
+            switch (state.getBackMode()) {
+                case WALK:
+                    itinerary.walkDistance += state.backEdge.getDistance();
+                    break;
+                case BICYCLE:
+                    itinerary.bikeDistance += state.backEdge.getDistance();
+                    break;
+
             }
         }
     }

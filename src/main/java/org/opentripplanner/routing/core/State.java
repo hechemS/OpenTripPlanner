@@ -364,6 +364,8 @@ public class State implements Cloneable {
     public State getBackState() {
         return this.backState;
     }
+
+    public void setBackState(State backState) { this.backState = backState; }
     
     public TraverseMode getBackMode () {
         return stateData.backMode;

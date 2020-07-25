@@ -47,8 +47,7 @@ public class MinimumDistancePathFinder extends PathFinder {
         request.rctx.debugOutput = debugOutput;
         debugOutput = null;
 
-        return joinParts(Collections.singletonList(minDistancePath), pathToDestination,
-                minDistancePath.states.getLast().getBackMode(), true);
+        return joinParts(Collections.singletonList(minDistancePath), pathToDestination, TraverseMode.WALK, true);
     }
 
     private GraphPath getMinimumDistancePath (RoutingRequest request, Collection<Vertex> temporaryVertices, long time) {
@@ -77,7 +76,7 @@ public class MinimumDistancePathFinder extends PathFinder {
             }
             if (lastPath != null) {
                 currentPath = joinParts(Collections.singletonList(lastPath), Collections.singletonList(paths.get(0)),
-                        lastPath.states.getLast().getBackMode(), true).get(0);
+                        TraverseMode.transportationToTraverseMode(mode), true).get(0);
             } else {
                 currentPath = paths.get(0);
             }

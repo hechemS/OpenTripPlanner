@@ -466,6 +466,7 @@ public abstract class PathFinder {
                 LegSwitchingEdge legSwitchingEdge = new LegSwitchingEdge(lastVertex, lastVertex);
                 after.states.getFirst().backEdge = legSwitchingEdge;
                 after.states.getFirst().setBackMode(traverseMode);
+                after.states.getFirst().setBackState(lastState);
                 GraphPath newPath = new GraphPath(lastState, false);
                 for (State s : after.states) {
                     newPath.states.add(s);
