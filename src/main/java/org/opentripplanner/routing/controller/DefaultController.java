@@ -9,7 +9,7 @@ import java.util.List;
 public class DefaultController extends RequestController {
 
     @Override
-    public void configure(RoutingRequest request, String bannedRoutes, String bannedStopsHard, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
+    public void configure(RoutingRequest request, String bannedRoutes, String bannedStops, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
         request.setWalkReluctance(3);
         // set preferred routes
         setPreferredRoutes(request, bannedRoutes);

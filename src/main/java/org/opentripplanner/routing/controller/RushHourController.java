@@ -15,16 +15,16 @@ public class RushHourController extends RequestController {
             "1:de:09162:6:52:54,1:de:09162:6:52:52,1:de:09162:6:32:72";
 
     @Override
-    public void configure(RoutingRequest request, String bannedRoutes, String bannedStopsHard, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
+    public void configure(RoutingRequest request, String bannedRoutes, String bannedStops, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
         request.setWalkReluctance(3);
         // set preferred routes
-        setPreferredRoutes(request, bannedRoutes);
+        setPreferredRoutes(request, preferredRoutes);
         request.setOtherThanPreferredRoutesPenalty(900);
         // avoid Sendlinger Tor and Hauptbahnhof.
-        if (bannedStopsHard == null) {
-            request.setBannedStopsHard(Sendlinger_Tor + "," + Hauptbahnhof);
+        if (bannedStops == null) {
+            request.setBannedStops(Sendlinger_Tor + "," + Hauptbahnhof);
         } else {
-            request.setBannedStopsHard(bannedStopsHard + "," + Sendlinger_Tor + "," + Hauptbahnhof);
+            request.setBannedStops(bannedStops + "," + Sendlinger_Tor + "," + Hauptbahnhof);
         }
 
         List<Constraint> constraints = new ArrayList<>();

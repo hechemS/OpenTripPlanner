@@ -1536,8 +1536,8 @@ public class RoutingRequest implements Cloneable, Serializable {
         this.requestController = requestController;
     }
 
-    public void configureRequest(String bannedRoutes, String bannedStopsHard, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
-        requestController.configure(this, bannedRoutes, bannedStopsHard, preferredRoutes, otherThanPreferredRoutesPenalty);
+    public void configureRequest(String bannedRoutes, String bannedStops, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
+        requestController.configure(this, bannedRoutes, bannedStops, preferredRoutes, otherThanPreferredRoutesPenalty);
     }
 
     public void setBikeLocation(String bikeLocation) {
