@@ -12,7 +12,7 @@ public class DefaultController extends RequestController {
     public void configure(RoutingRequest request, String bannedRoutes, String bannedStops, String preferredRoutes, Integer otherThanPreferredRoutesPenalty) {
         request.setWalkReluctance(3);
         // set preferred routes
-        setPreferredRoutes(request, bannedRoutes);
+        setPreferredRoutes(request, preferredRoutes);
         request.setOtherThanPreferredRoutesPenalty(900);
         // set constraints.
         List<Constraint> constraints = new ArrayList<>();

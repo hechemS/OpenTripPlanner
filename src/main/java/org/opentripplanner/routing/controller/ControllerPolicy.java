@@ -19,7 +19,7 @@ public class ControllerPolicy {
         int hours = getHours(request.getDateTime());
         if (hours < 7 || hours > 21) {
             request.selectController(new EmptyController());
-        } else if (request.getRushHouAvoidance() && (hours >= 7 && hours <= 8)) {
+        } else if (request.getRushHouAvoidance() && (isRushHour(request))) {
             request.selectController(new RushHourController());
         } else {
             request.selectController(new DefaultController());
@@ -42,6 +42,20 @@ public class ControllerPolicy {
         DateFormat formatter = createFormatter();
         String time = new SimpleDateFormat("HH:mm:ss").format(date);
         return Integer.parseInt(time.split(":")[1]);
+    }
+
+    public static boolean isRushHour(RoutingRequest request) {
+        int hours = getHours(request.getDateTime());
+        String[] periods = request.rushHourPeriods.split(",");
+        for (String period : periods) {
+            String[] times = period.split(":");
+            int start = Integer.parseInt(times[0]);
+            int end = Integer.parseInt(times[1]);
+            if (start <= hours && end > hours) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

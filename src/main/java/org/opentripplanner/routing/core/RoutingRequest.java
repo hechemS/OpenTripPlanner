@@ -52,6 +52,12 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(RoutingRequest.class);
 
+    private static String Sendlinger_Tor = "1:de:09162:50:35:75,1:de:09162:50:53:53,1:de:09162:50:1:1,1:de:09162:50:1:8," +
+            "1:de:09162:50:3:5,1:de:09162:50:3:3,1:de:09162:50:54:54,1:de:09162:50:10:10,1:de:09162:50:2:2," +
+            "1:de:09162:50:4:4,1:de:09162:50:11:11,1:de:09162:50:51:51,1:de:09162:50:51:52";
+    private static String Hauptbahnhof =  "1:de:09162:6:51:53,1:de:09162:6:51:51,1:de:09162:6:55:56,1:de:09162:6:55:55,1:de:09162:6:2:2,1:de:09162:6:2:1," +
+            "1:de:09162:6:52:54,1:de:09162:6:52:52,1:de:09162:6:32:72";
+
     /**
      * The model that computes turn/traversal costs.
      * TODO: move this to the Router or the Graph if it doesn't clutter the code too much
@@ -272,7 +278,11 @@ public class RoutingRequest implements Cloneable, Serializable {
     public HashMap<FeedScopedId, BannedStopSet> bannedTrips = new HashMap<FeedScopedId, BannedStopSet>();
 
     /** Do not use certain stops. See for more information the bannedStops property in the RoutingResource class. */
-    public StopMatcher bannedStops = StopMatcher.emptyMatcher(); 
+    public StopMatcher bannedStops = StopMatcher.emptyMatcher();
+
+    public String rushHourBannedStops = Sendlinger_Tor + "," + Hauptbahnhof;
+
+    public String rushHourPeriods = "7:9,15:17";
     
     /** Do not use certain stops. See for more information the bannedStopsHard property in the RoutingResource class. */
     public StopMatcher bannedStopsHard = StopMatcher.emptyMatcher();
